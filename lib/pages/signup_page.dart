@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_page.dart';
 import 'numbersignin_page.dart';
 import 'verification_page.dart';
+import '../services/auth_service.dart';
 import 'package:my_app/components/my_button.dart';
 import 'package:my_app/components/my_textfield.dart';
 import 'package:my_app/components/square_tile.dart';
@@ -11,18 +12,16 @@ class SignUpPage extends StatelessWidget {
 
   // Text editing controllers
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
 
   // Sign user up method
-  void signUserUp(BuildContext context) {
-    // Add your sign-up logic here
+  Future<void> signUserUp(BuildContext context) async {
+    final authService = AuthService();
 
-    // Navigate to the verification page
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const VerificationPage(),
-      ),
+    await authService.signup(
+      email: emailController.text,
+      password: passwordController.text, // Ensure you have a password input and controller
+      context: context,
     );
   }
 
@@ -67,11 +66,11 @@ class SignUpPage extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                // Phone number text field
+                // Password text field
                 MyTextField(
-                  controller: phoneController,
-                  hintText: 'Enter your phone number',
-                  obscureText: false,
+                  controller: passwordController,
+                  hintText: 'Enter your password',
+                  obscureText: true, // This should be true to hide password input
                 ),
 
                 const SizedBox(height: 25),

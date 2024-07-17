@@ -4,6 +4,7 @@ import 'package:my_app/components/my_textfield.dart';
 import 'package:my_app/components/square_tile.dart';
 import 'verification_page.dart';
 import 'package:my_app/pages/signup_page.dart' as signup;
+import '../services/auth_service.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -13,15 +14,12 @@ class LoginPage extends StatelessWidget {
   final passwordController = TextEditingController();
 
   // sign user in method
-  void signUserIn(BuildContext context) {
-    // Add your sign-in logic here
-
-    // Navigate to the verification page
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const VerificationPage(),
-      ),
+  void signUserIn(BuildContext context) async {
+    final authService = AuthService();
+    await authService.signin(
+      email: usernameController.text,
+      password: passwordController.text,
+      context: context,
     );
   }
 
