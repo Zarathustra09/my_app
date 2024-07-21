@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "64600634737",
+    "project_id": "couplay-9e2cb",
+    "storage_bucket": "couplay-9e2cb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64600634737:android:3ac7c5a2dd7707434d72d0",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkAUJyOvz8UGvpERDYEeUz2MtS5KT-FIs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

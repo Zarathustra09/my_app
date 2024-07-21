@@ -3,6 +3,8 @@ import 'package:my_app/components/my_button.dart';
 import 'package:my_app/components/my_textfield.dart';
 import 'package:my_app/components/square_tile.dart';
 import 'verification_page.dart';
+import 'package:my_app/pages/signup_page.dart' as signup;
+import '../services/auth_service.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -12,15 +14,12 @@ class LoginPage extends StatelessWidget {
   final passwordController = TextEditingController();
 
   // sign user in method
-  void signUserIn(BuildContext context) {
-    // Add your sign-in logic here
-
-    // Navigate to the verification page
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const VerificationPage(),
-      ),
+  void signUserIn(BuildContext context) async {
+    final authService = AuthService();
+    await authService.signin(
+      email: usernameController.text,
+      password: passwordController.text,
+      context: context,
     );
   }
 
@@ -130,18 +129,10 @@ class LoginPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
-                    // facebook button
-                    SquareTile(imagePath: 'lib/images/fb.png'),
 
-                    SizedBox(width: 25),
-
-                    // google button
-                    SquareTile(imagePath: 'lib/images/google.png'),
-
-                    SizedBox(width: 25),
-
-                    // apple button
-                    SquareTile(imagePath: 'lib/images/apple.png'),
+                    signup.SquareTile(imagePath: 'lib/images/fb.png'),
+                    signup.SquareTile(imagePath: 'lib/images/google.png'),
+                    signup.SquareTile(imagePath: 'lib/images/apple.png'),
                   ],
                 ),
 
@@ -156,11 +147,19 @@ class LoginPage extends StatelessWidget {
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(width: 4),
-                    const Text(
-                      'Register now',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => signup.SignUpPage()),
+                        );
+                      },
+                      child: const Text(
+                        'Register now',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
