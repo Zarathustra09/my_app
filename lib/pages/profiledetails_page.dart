@@ -15,7 +15,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
+      firstDate: DateTime(1990),
       lastDate: DateTime(2024),
     );
     if (pickedDate != null && pickedDate != _selectedDate) {
