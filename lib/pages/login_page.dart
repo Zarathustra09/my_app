@@ -5,6 +5,8 @@ import 'package:my_app/components/square_tile.dart';
 import 'verification_page.dart';
 import 'package:my_app/pages/signup_page.dart' as signup;
 import '../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -21,6 +23,22 @@ class LoginPage extends StatelessWidget {
       password: passwordController.text,
       context: context,
     );
+  }
+
+
+  signInWithGoogle() async {
+    GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+    AuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+    print(userCredential.user?.displayName);
   }
 
   @override
@@ -125,14 +143,17 @@ class LoginPage extends StatelessWidget {
 
                 const SizedBox(height: 50),
 
-                // facebook google apple sign in buttons
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
 
-                    signup.SquareTile(imagePath: 'lib/images/fb.png'),
-                    signup.SquareTile(imagePath: 'lib/images/google.png'),
-                    signup.SquareTile(imagePath: 'lib/images/apple.png'),
+                    signup.SquareTile(imagePath: 'lib/images/fb.png'), // Removed const
+                    signup.SquareTile(
+                      imagePath: 'lib/images/google.png',
+                      onTap: () => signInWithGoogle(), // Handle Google Sign-In
+                    ), // Removed const because onTap is not a constant expression
+                    signup.SquareTile(imagePath: 'lib/images/apple.png'), // Removed const
                   ],
                 ),
 
@@ -171,4 +192,5 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
+
 }
