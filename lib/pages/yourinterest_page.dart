@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'matching_page.dart';
 
 class YourInterestsPage extends StatefulWidget {
   const YourInterestsPage({super.key});
@@ -35,6 +36,13 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
         _selectedInterests.add(interest);
       }
     });
+  }
+
+  void _onContinueTap() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MatchingPage()),
+    );
   }
 
   @override
@@ -136,11 +144,10 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle continue action
-                  },
+                  onPressed: _onContinueTap,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.pink,
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.pink,
                     padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
