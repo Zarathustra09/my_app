@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'verification_page.dart';
+import '../account_setup/verification_page.dart';
 
 class NumberSignInPage extends StatelessWidget {
   const NumberSignInPage({super.key});

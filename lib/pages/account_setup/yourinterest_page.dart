@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'matching_page.dart';
+import '../Main page/matching_page.dart';
 
 class YourInterestsPage extends StatefulWidget {
   const YourInterestsPage({super.key});
