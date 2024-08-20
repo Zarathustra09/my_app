@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../pages/iam_page.dart';
 import '../pages/login_page.dart';
+import '../pages/matches_page.dart';
 
 class AuthService {
   Future<void> signup({
@@ -20,7 +21,7 @@ class AuthService {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (BuildContext context) => const IamPage(),
+          builder: (BuildContext context) => const MatchesPage(),
         ),
       );
 

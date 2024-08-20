@@ -3,6 +3,9 @@ import 'pages/signup_page.dart';
 import 'pages/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'pages/iam_page.dart';
+import 'pages/yourinterest_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +22,23 @@ class MyApp extends StatelessWidget {
   Widget build (BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (BuildContext context, AsyncSnapshot snapshot){
+          if(snapshot.hasError){
+            return const Text('Something went wrong');
+          }
+
+          if(snapshot.connectionState == ConnectionState.active){
+            if(snapshot.data == null){
+              return LoginPage();
+            } else {
+              return YourInterestsPage();
+            }
+          }
+          return CircularProgressIndicator();
+        }
+      ),
     );
   }
   }
