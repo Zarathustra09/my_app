@@ -10,20 +10,17 @@ class YourInterestsPage extends StatefulWidget {
 
 class _YourInterestsPageState extends State<YourInterestsPage> {
   final List<Map<String, dynamic>> _interests = [
-    {'name': 'Photography', 'icon': Icons.camera_alt},
-    {'name': 'Shopping', 'icon': Icons.shopping_bag},
-    {'name': 'Karaoke', 'icon': Icons.mic},
-    {'name': 'Yoga', 'icon': Icons.self_improvement},
-    {'name': 'Cooking', 'icon': Icons.restaurant},
-    {'name': 'Tennis', 'icon': Icons.sports_tennis},
-    {'name': 'Run', 'icon': Icons.directions_run},
-    {'name': 'Swimming', 'icon': Icons.pool},
-    {'name': 'Art', 'icon': Icons.palette},
-    {'name': 'Traveling', 'icon': Icons.flight},
-    {'name': 'Extreme', 'icon': Icons.dangerous},
-    {'name': 'Music', 'icon': Icons.music_note},
-    {'name': 'Drink', 'icon': Icons.local_bar},
-    {'name': 'Video games', 'icon': Icons.videogame_asset},
+    {'name': 'Cosplay', 'icon': Icons.camera_alt},
+    {'name': 'FPS', 'icon': Icons.shopping_bag},
+    {'name': 'Moba', 'icon': Icons.mic},
+    {'name': 'Puzzle', 'icon': Icons.self_improvement},
+    {'name': 'Horror', 'icon': Icons.restaurant},
+    {'name': 'RPG', 'icon': Icons.sports_tennis},
+    {'name': 'Casual', 'icon': Icons.directions_run},
+    {'name': 'Racing', 'icon': Icons.pool},
+    {'name': 'MMO', 'icon': Icons.palette},
+    {'name': 'Gacha', 'icon': Icons.flight},
+    {'name': 'Strategy', 'icon': Icons.dangerous},
   ];
 
   final Set<String> _selectedInterests = {};
