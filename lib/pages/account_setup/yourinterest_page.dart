@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../Main page/matching_page.dart';
 
 class YourInterestsPage extends StatefulWidget {
@@ -27,6 +29,32 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
   ];
 
   final Set<String> _selectedInterests = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingInterests();
+  }
+
+  void _checkExistingInterests() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists && doc.data()!['interests'] != null && (doc.data()!['interests'] as List).isNotEmpty) {
+        // Redirect to MatchingPage if interests data exists
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MatchingPage()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _onInterestTap(String interest) {
     setState(() {
@@ -38,15 +66,42 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
     });
   }
 
-  void _onContinueTap() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MatchingPage()),
-    );
+  void _onContinueTap() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null && _selectedInterests.isNotEmpty) {
+      // Save the selected interests to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({'interests': _selectedInterests.toList()}, SetOptions(merge: true));
+
+      // Navigate to MatchingPage
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MatchingPage()),
+      );
+    } else {
+      // Handle the case where no interest is selected
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select at least one interest'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -68,7 +123,7 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
                 Align(
                   alignment: Alignment.topRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _onContinueTap,
                     child: const Text(
                       'Skip',
                       style: TextStyle(
