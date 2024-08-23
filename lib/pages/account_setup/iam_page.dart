@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'yourinterest_page.dart';
 
 class IamPage extends StatefulWidget {
@@ -12,75 +10,16 @@ class IamPage extends StatefulWidget {
 
 class _IamPageState extends State<IamPage> {
   String? _selectedGender;
-  bool _isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkExistingGender();
-  }
-
-  void _checkExistingGender() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      if (doc.exists && doc.data()!['gender'] != null) {
-        // Redirect to YourInterestsPage if gender data exists
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => YourInterestsPage()),
-        );
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _onGenderTap(String gender) {
-    setState(() {
-      _selectedGender = gender;
-    });
-  }
-
-  void _onContinueTap() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null && _selectedGender != null) {
-      // Save the selected gender to Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set({'gender': _selectedGender}, SetOptions(merge: true));
-
-      // Navigate to YourInterestsPage
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => YourInterestsPage()),
-      );
-    } else {
-      // Handle the case where no gender is selected
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please select your gender'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  void _onContinueTap() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => YourInterestsPage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -90,28 +29,6 @@ class _IamPageState extends State<IamPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: TextButton(
-                    onPressed: _onContinueTap,
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: Colors.pink,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 20),
                 const Text(
                   'I am a',
@@ -123,7 +40,12 @@ class _IamPageState extends State<IamPage> {
                 ),
                 const SizedBox(height: 20),
                 ListTile(
-                  title: const Text('Woman'),
+                  title: Text(
+                    'Woman',
+                    style: TextStyle(
+                      color: _selectedGender == 'Woman' ? Colors.white : Colors.black,
+                    ),
+                  ),
                   trailing: _selectedGender == 'Woman'
                       ? const Icon(Icons.check, color: Colors.white)
                       : null,
@@ -132,11 +54,20 @@ class _IamPageState extends State<IamPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  onTap: () => _onGenderTap('Woman'),
+                  onTap: () {
+                    setState(() {
+                      _selectedGender = 'Woman';
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
                 ListTile(
-                  title: const Text('Man'),
+                  title: Text(
+                    'Man',
+                    style: TextStyle(
+                      color: _selectedGender == 'Man' ? Colors.white : Colors.black,
+                    ),
+                  ),
                   trailing: _selectedGender == 'Man'
                       ? const Icon(Icons.check, color: Colors.white)
                       : null,
@@ -145,7 +76,11 @@ class _IamPageState extends State<IamPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  onTap: () => _onGenderTap('Man'),
+                  onTap: () {
+                    setState(() {
+                      _selectedGender = 'Man';
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
                 ListTile(
@@ -162,7 +97,8 @@ class _IamPageState extends State<IamPage> {
                 ElevatedButton(
                   onPressed: _onContinueTap,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.pink,
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.pink,
                     padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
