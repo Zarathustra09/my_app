@@ -42,7 +42,20 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [                
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      'Skip',
+                      style: TextStyle(
+                        color: Colors.pink,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 const Text(
                   'Profile details',
