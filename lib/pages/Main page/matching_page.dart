@@ -67,13 +67,7 @@ class _MatchingPageState extends State<MatchingPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        elevation: 0,        
         title: Column(
           children: const [
             Text(
@@ -86,15 +80,7 @@ class _MatchingPageState extends State<MatchingPage> {
             ),
           ],
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.black),
-            onPressed: () {
-              // Filter action
-            },
-          ),
-        ],
+        centerTitle: true,        
       ),
       body: Center(
         child: TCard(
@@ -159,11 +145,7 @@ class _MatchingPageState extends State<MatchingPage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.filter_list),
-            label: 'Filter',
-          ),
+        items: const <BottomNavigationBarItem>[          
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite, color: Colors.red),
             label: 'Matches',
@@ -171,6 +153,10 @@ class _MatchingPageState extends State<MatchingPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
             label: 'Messages',
+          ),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Logout',
           ),
         ],
         currentIndex: _selectedIndex,

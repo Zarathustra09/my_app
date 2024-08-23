@@ -89,29 +89,7 @@ class _IamPageState extends State<IamPage> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: TextButton(
-                    onPressed: _onContinueTap,
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: Colors.pink,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
+              children: [              
                 const SizedBox(height: 20),
                 const Text(
                   'I am a',
