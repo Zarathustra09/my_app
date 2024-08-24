@@ -8,6 +8,8 @@ import '../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'account_setup/iam_page.dart';
+
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
@@ -25,26 +27,59 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-
-  signInWithGoogle() async {
+  // New Google Sign-In method with debugging statements
+  signInWithGoogle(BuildContext context) async {
     try {
-      GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      print("Starting Google Sign-In process...");
 
-      GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+      GoogleSignIn googleSignIn = GoogleSignIn();
+      GoogleSignInAccount? googleUser = googleSignIn.currentUser;
+
+      if (googleUser != null) {
+        print("Existing Google Sign-In session found. Signing out...");
+        await googleSignIn.signOut();
+        print("Signed out of existing Google session.");
+      } else {
+        print("No existing Google Sign-In session found.");
+      }
+
+      print("Initiating new Google Sign-In...");
+      googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        print("Google Sign-In was canceled by the user.");
+        return;
+      }
+
+      print("Google Sign-In successful. User: ${googleUser.displayName}");
+
+      GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
       AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
+      print("Firebase credential obtained, signing in with Firebase...");
       UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
-      print(userCredential.user?.displayName);
-    } catch (e) {
-      print(e);
-    }
+      print("Firebase Sign-In successful. Firebase User: ${userCredential.user?.displayName}");
 
+      print("Navigating to IamPage...");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) => IamPage(),
+        ),
+      );
+
+      print("Navigation to IamPage successful.");
+    } catch (e) {
+      print("Error during Google Sign-In: $e");
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -148,15 +183,13 @@ class LoginPage extends StatelessWidget {
 
                 const SizedBox(height: 50),
 
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
                     signup.SquareTile(imagePath: 'lib/images/fb.png'), // Removed const
                     signup.SquareTile(
                       imagePath: 'lib/images/google.png',
-                      onTap: () => signInWithGoogle(), // Handle Google Sign-In
+                      onTap: () => signInWithGoogle(context), // Handle Google Sign-In
                     ), // Removed const because onTap is not a constant expression
                     signup.SquareTile(imagePath: 'lib/images/apple.png'), // Removed const
                   ],
@@ -197,5 +230,4 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
-
 }

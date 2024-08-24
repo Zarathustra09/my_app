@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../pages/account_setup/iam_page.dart';
 import '../pages/login_register/login_page.dart';
 import '../pages/Main page/matches_page.dart';
@@ -73,8 +74,19 @@ class AuthService {
   Future<void> signout({
     required BuildContext context,
   }) async {
+    if (GoogleSignIn().currentUser != null) {
+      await GoogleSignIn().signOut();
+    }
+
+    try {
+      await GoogleSignIn().disconnect();
+    } catch (e) {
+      print('Failed to disconnect on signout: $e');
+    }
+
     await FirebaseAuth.instance.signOut();
     await Future.delayed(const Duration(seconds: 1));
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -82,6 +94,8 @@ class AuthService {
       ),
     );
   }
+
+
 
   void _showToast(String message) {
     Fluttertoast.showToast(
