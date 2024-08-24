@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:my_app/pages/account_setup/getusername_page.dart';
 import 'yourinterest_page.dart';
 
 class IamPage extends StatefulWidget {
@@ -29,7 +30,7 @@ class _IamPageState extends State<IamPage> {
         // Redirect to YourInterestsPage if gender data exists
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => YourInterestsPage()),
+          MaterialPageRoute(builder: (context) => GetUsernamePage()),
         );
       } else {
         setState(() {
@@ -89,7 +90,7 @@ class _IamPageState extends State<IamPage> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [              
+              children: [
                 const SizedBox(height: 20),
                 const Text(
                   'I am a',

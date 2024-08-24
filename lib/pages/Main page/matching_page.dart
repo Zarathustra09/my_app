@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/pages/account_setup/getusername_page.dart';
 import 'package:tcard/tcard.dart';
 import '../../services/auth_service.dart';
 import 'profileinfo_page.dart';
@@ -53,7 +54,7 @@ class _MatchingPageState extends State<MatchingPage> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const MessagesPage()),
+          MaterialPageRoute(builder: (context) => MatchingPage()),
         );
         break;
       case 2:
