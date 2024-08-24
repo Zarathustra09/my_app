@@ -14,6 +14,27 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
   final _usernameController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingUsername();
+  }
+
+  Future<void> _checkExistingUsername() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists && doc.data()!['username'] != null) {
+        // Redirect to YourInterestsPage if username data exists
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => YourInterestsPage()),
+        );
+      }
+    }
+  }
+
   Future<bool> _checkUsernameExists(String username) async {
     final snapshot = await FirebaseFirestore.instance
         .collection('users')
@@ -51,7 +72,7 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
               .set({'username': username}, SetOptions(merge: true));
 
           // Navigate to YourInterestsPage
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => YourInterestsPage()),
           );

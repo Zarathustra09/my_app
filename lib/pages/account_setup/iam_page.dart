@@ -59,7 +59,7 @@ class _IamPageState extends State<IamPage> {
       // Navigate to YourInterestsPage
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => YourInterestsPage()),
+        MaterialPageRoute(builder: (context) => GetUsernamePage()),
       );
     } else {
       // Handle the case where no gender is selected
