@@ -94,7 +94,7 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
 
                 // New user logo
                 Image.asset(
-                  'lib/images/new_user_logo.png', // Replace with your new logo path
+                  'lib/images/logo.png', // Replace with your new logo path
                   height: MediaQuery.of(context).size.height * 0.15,
                 ),
 
