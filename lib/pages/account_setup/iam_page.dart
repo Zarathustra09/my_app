@@ -102,7 +102,12 @@ class _IamPageState extends State<IamPage> {
                 ),
                 const SizedBox(height: 20),
                 ListTile(
-                  title: const Text('Woman'),
+                  title: Text(
+                    'Woman',
+                    style: TextStyle(
+                      color: _selectedGender == 'Woman' ? Colors.white : Colors.black,
+                    ),
+                  ),
                   trailing: _selectedGender == 'Woman'
                       ? const Icon(Icons.check, color: Colors.white)
                       : null,
@@ -115,7 +120,12 @@ class _IamPageState extends State<IamPage> {
                 ),
                 const SizedBox(height: 10),
                 ListTile(
-                  title: const Text('Man'),
+                  title: Text(
+                    'Man',
+                    style: TextStyle(
+                      color: _selectedGender == 'Man' ? Colors.white : Colors.black,
+                    ),
+                  ),
                   trailing: _selectedGender == 'Man'
                       ? const Icon(Icons.check, color: Colors.white)
                       : null,

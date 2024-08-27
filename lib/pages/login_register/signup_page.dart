@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
-import 'numbersignin_page.dart';
+import '../account_setup/iam_page.dart';
 import '../account_setup/verification_page.dart';
 import '../../services/auth_service.dart';
 import 'package:my_app/components/my_button.dart';
@@ -26,26 +26,24 @@ class SignUpPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
-
+  Widget build(BuildContext context) {    
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
+          child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(height: screenHeight * 0.05),
+              const SizedBox(height: 20),
 
               // Logo
               Image.asset(
                 'lib/images/logo.png',
-                height: screenHeight * 0.15,
+                height: 100,
               ),
 
-              SizedBox(height: screenHeight * 0.05),
+              const SizedBox(height: 30),
 
               // Sign up to continue text
               const Text(
@@ -57,7 +55,7 @@ class SignUpPage extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: screenHeight * 0.03),
+              const SizedBox(height: 25),
 
               // Email text field
               MyTextField(
@@ -66,7 +64,7 @@ class SignUpPage extends StatelessWidget {
                 obscureText: false,
               ),
 
-              SizedBox(height: screenHeight * 0.015),
+              const SizedBox(height: 10),
 
               // Password text field
               MyTextField(
@@ -75,18 +73,18 @@ class SignUpPage extends StatelessWidget {
                 obscureText: true,
               ),
 
-              SizedBox(height: screenHeight * 0.03),
+              const SizedBox(height: 10),
 
               // Sign up button
               MyButton(
                 onTap: () => signUserUp(context),
               ),
 
-              SizedBox(height: screenHeight * 0.05),
+              const SizedBox(height: 30),
 
               // Divider with text
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
                     Expanded(
@@ -112,7 +110,7 @@ class SignUpPage extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: screenHeight * 0.03),
+              const SizedBox(height: 30),
 
               // Social media sign up buttons
               Row(
@@ -126,7 +124,7 @@ class SignUpPage extends StatelessWidget {
                 ],
               ),
 
-              SizedBox(height: screenHeight * 0.05),
+              const SizedBox(height: 30),
 
               // Already a member? Sign in now
               Row(
@@ -155,11 +153,11 @@ class SignUpPage extends StatelessWidget {
                 ],
               ),
 
-              SizedBox(height: screenHeight * 0.03),
+              const SizedBox(height: 20),
 
               // Terms of use and privacy policy
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
@@ -185,6 +183,7 @@ class SignUpPage extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

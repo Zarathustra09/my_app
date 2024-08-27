@@ -22,7 +22,7 @@ class AuthService {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (BuildContext context) => const MatchesPage(),
+          builder: (BuildContext context) => const IamPage(),
         ),
       );
 

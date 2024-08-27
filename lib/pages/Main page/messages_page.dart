@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'matching_page.dart'; // Import the MatchingPage
+import 'matches_page.dart'; // Import the MatchesPage
 
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
@@ -8,6 +10,7 @@ class MessagesPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -40,7 +43,7 @@ class MessagesPage extends StatelessWidget {
               child: Row(
                 children: [
                   ActivityCircle(image: 'lib/images/ca.jpg', name: 'You'),
-                  ActivityCircle(image: 'lib/images/Jar.jpg', name: 'Emma'),
+                  ActivityCircle(image: 'lib/images/ca.jpg', name: 'Emma'),
                   ActivityCircle(image: 'lib/images/he.jpg', name: 'Ava'),
                   ActivityCircle(image: 'lib/images/ca.jpg', name: 'Sophia'),
                   // Add more ActivityCircle widgets as needed
@@ -80,6 +83,38 @@ class MessagesPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: 'Matches',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message, color: Colors.red),
+            label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_search),
+            label: 'Discover',
+          ),
+        ],
+        currentIndex: 1, // Highlight the "Messages" icon
+        selectedItemColor: Colors.red,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MatchesPage()),
+            );
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MatchingPage()),
+            );
+          }
+          // The "Messages" button will remain highlighted and unclickable
+        },
       ),
     );
   }

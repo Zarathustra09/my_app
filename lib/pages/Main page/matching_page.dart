@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/pages/account_setup/getusername_page.dart';
-import 'package:tcard/tcard.dart';
 import '../../services/auth_service.dart';
 import 'profileinfo_page.dart';
 import 'messages_page.dart'; 
@@ -19,58 +17,90 @@ class _MatchingPageState extends State<MatchingPage> {
       'name': 'CJ',
       'age': 22,
       'occupation': 'Professional model',
-      'image': 'lib/images/ca.jpg'
+      'image': 'lib/images/ca.jpg',
     },
     {
       'name': 'Jarc diz',
       'age': 21,
       'occupation': 'Graphic Designer',
-      'image': 'lib/images/Jar.jpg'
+      'image': 'lib/images/ca.jpg',
     },
     {
       'name': 'Heal Papi',
       'age': 22,
       'occupation': 'Photographer',
-      'image': 'lib/images/he.jpg'
+      'image': 'lib/images/he.jpg',
     },
   ];
-
-  final TCardController _controller = TCardController();
 
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == 2) {
+      // Show a confirmation dialog when logout is tapped
+      _showLogoutConfirmation();
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
 
-    switch (index) {
-      case 0:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MatchesPage()),
-        );
-        break;
-      case 1:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MatchingPage()),
-        );
-        break;
-      case 2:
-        AuthService().signout(context: context);
-        break;
-        break;
+      switch (index) {
+        case 0:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MatchesPage()),
+          );
+          break;
+        case 1:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MessagesPage()),
+          );
+          break;
+      }
     }
   }
+
+  void _logout() {
+    AuthService().signout(context: context);
+  }
+
+  void _showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout Confirmation'),
+          content: const Text('Are you sure you want to log out?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              child: const Text('Logout'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog before logging out
+                _logout(); // Call the logout function
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
+        appBar: AppBar(
+        automaticallyImplyLeading: false, // This line removes the back arrow
         backgroundColor: Colors.white,
-        elevation: 0,        
+        elevation: 0,
         title: Column(
           children: const [
             Text(
@@ -83,81 +113,77 @@ class _MatchingPageState extends State<MatchingPage> {
             ),
           ],
         ),
-        centerTitle: true,        
+        centerTitle: true,
       ),
-      body: Center(
-        child: TCard(
-          cards: _profiles.map((profile) {
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProfileInfoPage(profile: profile),
-                  ),
-                );
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(blurRadius: 10, color: Colors.grey.withOpacity(0.5), spreadRadius: 5)],
-                  image: DecorationImage(
-                    image: AssetImage(profile['image']),
-                    fit: BoxFit.cover,
-                  ),
+      body: PageView.builder(
+        itemCount: _profiles.length,
+        itemBuilder: (context, index) {
+          final profile = _profiles[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileInfoPage(profile: profile),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(16),
-                          bottomRight: Radius.circular(16),
-                        ),
-                        color: Colors.black.withOpacity(0.6),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${profile['name']}, ${profile['age']}',
-                            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            profile['occupation'],
-                            style: const TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(blurRadius: 10, color: Colors.grey.withOpacity(0.5), spreadRadius: 5),
+                ],
+                image: DecorationImage(
+                  image: AssetImage(profile['image']),
+                  fit: BoxFit.cover,
                 ),
               ),
-            );
-          }).toList(),
-          controller: _controller,
-          onForward: (index, info) {
-            if (info.direction == SwipDirection.Right) {
-              // Handle swipe right action (like)
-            } else if (info.direction == SwipDirection.Left) {
-              // Handle swipe left action (dislike)
-            }
-          },
-        ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
+                      ),
+                      color: Colors.black.withOpacity(0.6),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${profile['name']}, ${profile['age']}',
+                          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          profile['occupation'],
+                          style: const TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[          
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite, color: Colors.red),
+            icon: Icon(Icons.favorite),
             label: 'Matches',
           ),
+          
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
             label: 'Messages',
           ),
-        BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Logout',
           ),

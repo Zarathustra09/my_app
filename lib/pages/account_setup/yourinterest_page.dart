@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../Main page/matching_page.dart';
+import 'notification_pages.dart'; // Updated import to notification_pages.dart
 
 class YourInterestsPage extends StatefulWidget {
   const YourInterestsPage({super.key});
@@ -40,10 +40,10 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
     if (user != null) {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (doc.exists && doc.data()!['interests'] != null && (doc.data()!['interests'] as List).isNotEmpty) {
-        // Redirect to MatchingPage if interests data exists
+        // Redirect to NotificationPage if interests data exists
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MatchingPage()),
+          MaterialPageRoute(builder: (context) => EnableNotificationsPage()), // Updated to NotificationPage
         );
       } else {
         setState(() {
@@ -73,10 +73,10 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
           .doc(user.uid)
           .set({'interests': _selectedInterests.toList()}, SetOptions(merge: true));
 
-      // Navigate to MatchingPage
+      // Navigate to NotificationPage
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => MatchingPage()),
+        MaterialPageRoute(builder: (context) => EnableNotificationsPage()), // Updated to NotificationPage
       );
     } else {
       // Handle the case where no interest is selected
@@ -107,7 +107,7 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [                
+              children: [
                 const SizedBox(height: 20),
                 const Text(
                   'Your interests',
