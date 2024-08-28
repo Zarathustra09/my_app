@@ -1,9 +1,56 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class ProfileInfoPage extends StatelessWidget {
+class ProfileInfoPage extends StatefulWidget {
   final Map<String, dynamic> profile;
 
   const ProfileInfoPage({super.key, required this.profile});
+
+  @override
+  _ProfileInfoPageState createState() => _ProfileInfoPageState();
+}
+
+class _ProfileInfoPageState extends State<ProfileInfoPage> {
+  void _showEditAboutDialog() {
+    final TextEditingController _aboutController = TextEditingController(text: widget.profile['about']);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit About'),
+          content: TextField(
+            controller: _aboutController,
+            decoration: const InputDecoration(hintText: 'Enter about info'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                    'about': _aboutController.text,
+                  });
+                  setState(() {
+                    widget.profile['about'] = _aboutController.text;
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +59,7 @@ class ProfileInfoPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Profile Info',
           style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
         ),
@@ -27,59 +74,49 @@ class ProfileInfoPage extends StatelessWidget {
               Center(
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundImage: AssetImage(profile['image']),
+                  backgroundImage: NetworkImage(widget.profile['image'] ?? 'https://via.placeholder.com/150'),
                 ),
               ),
               const SizedBox(height: 16),
               Center(
                 child: Text(
-                  '${profile['name']}, ${profile['age']}',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  '${widget.profile['name'] ?? 'Unknown'}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  profile['occupation'],
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                  widget.profile['age'] ?? 'Unknown',
+                  style: const TextStyle(fontSize: 18, color: Colors.grey),
                 ),
               ),
               const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.location_on, color: Colors.pink),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Tanauan, Batangas, Philippines',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  const Text(
+                    'About',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.favorite, color: Colors.pink),
-                  const SizedBox(width: 4),
-                  Text(
-                    '1 km',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _showEditAboutDialog,
+                    child: const Icon(Icons.edit, color: Colors.grey),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                'About',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
               const SizedBox(height: 8),
               Text(
-                'My name is ${profile['name']} and I enjoy meeting new people and finding ways to help them have an uplifting experience. I enjoy reading...',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                widget.profile['about'] ?? 'Emptiness is in here',
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'Read more',
                 style: TextStyle(fontSize: 16, color: Colors.pink),
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Interests',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -87,31 +124,15 @@ class ProfileInfoPage extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: [
-                  Chip(
-                    label: Text('Traveling'),
+                children: (widget.profile['interests'] ?? []).map<Widget>((interest) {
+                  return Chip(
+                    label: Text(interest),
                     backgroundColor: Colors.pink.withOpacity(0.2),
-                  ),
-                  Chip(
-                    label: Text('Books'),
-                    backgroundColor: Colors.pink.withOpacity(0.2),
-                  ),
-                  Chip(
-                    label: Text('Music'),
-                    backgroundColor: Colors.grey.withOpacity(0.2),
-                  ),
-                  Chip(
-                    label: Text('Dancing'),
-                    backgroundColor: Colors.grey.withOpacity(0.2),
-                  ),
-                  Chip(
-                    label: Text('Modeling'),
-                    backgroundColor: Colors.grey.withOpacity(0.2),
-                  ),
-                ],
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Gallery',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -131,7 +152,7 @@ class ProfileInfoPage extends StatelessWidget {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: Text(
+                child: const Text(
                   'See all',
                   style: TextStyle(fontSize: 16, color: Colors.pink),
                 ),
