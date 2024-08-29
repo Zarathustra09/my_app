@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import 'profileinfo_page.dart';
 import 'messages_page.dart';
 import 'matches_page.dart';
-import '../themes.dart'; 
+import '../themes.dart';
 
 class MatchingPage extends StatefulWidget {
   const MatchingPage({super.key});
@@ -15,14 +17,13 @@ class MatchingPage extends StatefulWidget {
 class _MatchingPageState extends State<MatchingPage> {
   List<Map<String, dynamic>> _profiles = [];
   bool _isLoading = true;
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   @override
   void initState() {
     super.initState();
     _fetchProfiles();
   }
-
 
   int _calculateAge(String birthday) {
     DateTime birthDate = DateTime.parse(birthday);
@@ -44,7 +45,6 @@ class _MatchingPageState extends State<MatchingPage> {
     return score;
   }
 
-// Update _fetchProfiles method in MatchingPage
   Future<void> _fetchProfiles() async {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -59,7 +59,7 @@ class _MatchingPageState extends State<MatchingPage> {
         final matchScore = _calculateMatchScore(userInterests, data['interests'] ?? []);
         return {
           'name': data['username'] ?? 'Unknown',
-          'age': age,
+          'age': age ?? 'Unknown',
           'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
           'interests': data['interests'] ?? [],
           'about': data['about'] ?? 'No information',
@@ -68,11 +68,7 @@ class _MatchingPageState extends State<MatchingPage> {
         };
       }).toList();
 
-      // Sort profiles by matchScore in descending order
       fetchedProfiles.sort((a, b) => b['matchScore'].compareTo(a['matchScore']));
-
-      // Print the fetched profiles
-      print('Fetched Profiles: $fetchedProfiles');
 
       setState(() {
         _profiles = fetchedProfiles;
@@ -84,7 +80,7 @@ class _MatchingPageState extends State<MatchingPage> {
   void _onItemTapped(int index) {
     if (index == 3) {
       _showLogoutConfirmation();
-    } else if (index != 1) { // Prevent action for Discover button
+    } else if (index != 1) {
       setState(() {
         _selectedIndex = index;
       });
@@ -174,8 +170,7 @@ class _MatchingPageState extends State<MatchingPage> {
               );
             },
             child: Container(
-              margin:
-                  const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+              margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -185,7 +180,7 @@ class _MatchingPageState extends State<MatchingPage> {
                       spreadRadius: 5),
                 ],
                 image: DecorationImage(
-                  image: AssetImage(profile['image']),
+                  image: NetworkImage(profile['image']),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -205,14 +200,14 @@ class _MatchingPageState extends State<MatchingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${profile['name']}, ${profile['age']}',
+                          '${profile['name']}',
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          profile['occupation'],
+                          profile['age'],
                           style: const TextStyle(
                               color: Colors.white, fontSize: 18),
                         ),
@@ -227,7 +222,7 @@ class _MatchingPageState extends State<MatchingPage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: AppColors.navbarBackground,
-        items: <BottomNavigationBarItem>[
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Matches',
