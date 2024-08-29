@@ -45,12 +45,14 @@ class _MatchingPageState extends State<MatchingPage> {
     return score;
   }
 
+  // Update _fetchProfiles method in MatchingPage
   Future<void> _fetchProfiles() async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final userInterests = userDoc.data()?['interests'] ?? [];
+      final currentUserUid = user.uid;
 
       final snapshot = await FirebaseFirestore.instance.collection('users').get();
       final List<Map<String, dynamic>> fetchedProfiles = snapshot.docs.map((doc) {
@@ -66,7 +68,7 @@ class _MatchingPageState extends State<MatchingPage> {
           'uid': doc.id,
           'matchScore': matchScore,
         };
-      }).toList();
+      }).where((profile) => profile['uid'] != currentUserUid).toList();
 
       fetchedProfiles.sort((a, b) => b['matchScore'].compareTo(a['matchScore']));
 
