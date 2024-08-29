@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 import 'profileinfo_page.dart';
 import 'messages_page.dart';
 import 'matches_page.dart';
+import '../themes.dart'; 
 
 class MatchingPage extends StatefulWidget {
   const MatchingPage({super.key});
@@ -83,9 +82,9 @@ class _MatchingPageState extends State<MatchingPage> {
   }
 
   void _onItemTapped(int index) {
-    if (index == 2) {
+    if (index == 3) {
       _showLogoutConfirmation();
-    } else {
+    } else if (index != 1) { // Prevent action for Discover button
       setState(() {
         _selectedIndex = index;
       });
@@ -97,7 +96,7 @@ class _MatchingPageState extends State<MatchingPage> {
             MaterialPageRoute(builder: (context) => const MatchesPage()),
           );
           break;
-        case 1:
+        case 2:
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const MessagesPage()),
@@ -116,16 +115,21 @@ class _MatchingPageState extends State<MatchingPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: const Text('Logout Confirmation'),
+          content: const Text('Are you sure you want to log out?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
             TextButton(
-              onPressed: _logout,
               child: const Text('Logout'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _logout();
+              },
             ),
           ],
         );
@@ -135,14 +139,6 @@ class _MatchingPageState extends State<MatchingPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -153,7 +149,10 @@ class _MatchingPageState extends State<MatchingPage> {
           children: const [
             Text(
               'Discover',
-              style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold),
             ),
             Text(
               'Batangas, Philippines',
@@ -175,18 +174,18 @@ class _MatchingPageState extends State<MatchingPage> {
               );
             },
             child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+              margin:
+                  const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
-                  ),
+                      blurRadius: 10,
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 5),
                 ],
                 image: DecorationImage(
-                  image: NetworkImage(profile['image']),
+                  image: AssetImage(profile['image']),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -194,43 +193,28 @@ class _MatchingPageState extends State<MatchingPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.only(
+                      borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(16),
                         bottomRight: Radius.circular(16),
                       ),
+                      color: Colors.black.withOpacity(0.6),
                     ),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          profile['name'],
+                          '${profile['name']}, ${profile['age']}',
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          'Age: ${profile['age']}',
+                          profile['occupation'],
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Wrap(
-                          children: (profile['interests'] as List<dynamic>).map((interest) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: Chip(
-                                label: Text(interest),
-                                backgroundColor: Colors.pink,
-                                labelStyle: const TextStyle(color: Colors.white),
-                              ),
-                            );
-                          }).toList(),
+                              color: Colors.white, fontSize: 18),
                         ),
                       ],
                     ),
@@ -242,22 +226,29 @@ class _MatchingPageState extends State<MatchingPage> {
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        backgroundColor: AppColors.navbarBackground,
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Matches',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_search),
+            label: 'Discover',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
             label: 'Messages',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.logout),
             label: 'Logout',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.red,
+        selectedItemColor: AppColors.textHighlight,
+        unselectedItemColor: AppColors.iconUnselected,
+        showUnselectedLabels: true,
         onTap: _onItemTapped,
       ),
     );

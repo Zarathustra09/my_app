@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'matching_page.dart'; // Import the MatchingPage
 import 'matches_page.dart'; // Import the MatchesPage
+import '../../services/auth_service.dart'; // Import your AuthService
+import '../themes.dart';
 
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
@@ -91,32 +93,71 @@ class MessagesPage extends StatelessWidget {
             label: 'Matches',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.message, color: Colors.red),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.person_search),
             label: 'Discover',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message),
+            label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.logout),
+            label: 'Logout',
+          ),
         ],
-        currentIndex: 1, // Highlight the "Messages" icon
-        selectedItemColor: Colors.red,
+        currentIndex: 2, // Highlight the "Messages" icon
+        selectedItemColor: AppColors.textHighlight,
+        unselectedItemColor: AppColors.iconUnselected,
+        showUnselectedLabels: true,
         onTap: (index) {
           if (index == 0) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const MatchesPage()),
             );
-          } else if (index == 2) {
+          } else if (index == 1) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const MatchingPage()),
             );
+          } else if (index == 3) {
+            _showLogoutConfirmation(context);
           }
           // The "Messages" button will remain highlighted and unclickable
         },
       ),
     );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout Confirmation'),
+          content: const Text('Are you sure you want to log out?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Logout'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _logout(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _logout(BuildContext context) {
+    AuthService().signout(context: context);
   }
 }
 

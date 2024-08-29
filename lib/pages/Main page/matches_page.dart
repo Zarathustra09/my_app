@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'messages_page.dart'; // Import the MessagesPage
-import 'matching_page.dart'; // Import the MatchingPage
+import 'messages_page.dart';
+import 'matching_page.dart';
+import '../themes.dart';
+import '../../services/auth_service.dart';
 
 class MatchesPage extends StatelessWidget {
   const MatchesPage({super.key});
@@ -79,35 +81,74 @@ class MatchesPage extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite, color: Colors.red),
+            icon: Icon(Icons.favorite),
             label: 'Matches',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_search),
+            label: 'Discover',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
             label: 'Messages',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_search),
-            label: 'Discover',
+            icon: Icon(Icons.logout),
+            label: 'Logout',
           ),
         ],
         currentIndex: 0, // Highlight the "Matches" icon
-        selectedItemColor: Colors.red,
+        selectedItemColor: AppColors.textHighlight,
+        unselectedItemColor: AppColors.iconUnselected,
+        showUnselectedLabels: true,
         onTap: (index) {
           if (index == 1) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const MessagesPage()),
+              MaterialPageRoute(builder: (context) => const MatchingPage()),
             );
           } else if (index == 2) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const MatchingPage()),
+              MaterialPageRoute(builder: (context) => const MessagesPage()),
             );
+          } else if (index == 3) {
+            _showLogoutConfirmation(context);
           }
           // The "Matches" button will remain highlighted and unclickable
         },
       ),
     );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout Confirmation'),
+          content: const Text('Are you sure you want to log out?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Logout'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _logout(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _logout(BuildContext context) {
+    AuthService().signout(context: context);
   }
 }
