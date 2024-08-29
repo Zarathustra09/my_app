@@ -24,22 +24,56 @@ class _MatchingPageState extends State<MatchingPage> {
     _fetchProfiles();
   }
 
+
+  int _calculateAge(String birthday) {
+    DateTime birthDate = DateTime.parse(birthday);
+    DateTime today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month || (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  int _calculateMatchScore(List<dynamic> userInterests, List<dynamic> profileInterests) {
+    int score = 0;
+    for (var interest in userInterests) {
+      if (profileInterests.contains(interest)) {
+        score++;
+      }
+    }
+    return score;
+  }
+
+// Update _fetchProfiles method in MatchingPage
   Future<void> _fetchProfiles() async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final userInterests = userDoc.data()?['interests'] ?? [];
+
       final snapshot = await FirebaseFirestore.instance.collection('users').get();
       final List<Map<String, dynamic>> fetchedProfiles = snapshot.docs.map((doc) {
         final data = doc.data();
-        final birthday = data['birthday'] != null ? DateTime.parse(data['birthday']) : null;
-        final age = birthday != null ? (DateTime.now().year - birthday.year).toString() : 'Unknown';
+        final age = data['birthday'] != null ? _calculateAge(data['birthday']).toString() : 'Unknown';
+        final matchScore = _calculateMatchScore(userInterests, data['interests'] ?? []);
         return {
-          'name': data['username'] ?? 'Unknown', // Default to 'Unknown' if null
-          'age': age, // Age is already a string
-          'image': data['imageUrl'] ?? 'https://via.placeholder.com/150', // Default to a placeholder image URL
-          'interests': data['interests'] ?? [], // Default to an empty array if null
+          'name': data['username'] ?? 'Unknown',
+          'age': age,
+          'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
+          'interests': data['interests'] ?? [],
+          'about': data['about'] ?? 'No information',
+          'uid': doc.id,
+          'matchScore': matchScore,
         };
       }).toList();
+
+      // Sort profiles by matchScore in descending order
+      fetchedProfiles.sort((a, b) => b['matchScore'].compareTo(a['matchScore']));
+
+      // Print the fetched profiles
+      print('Fetched Profiles: $fetchedProfiles');
 
       setState(() {
         _profiles = fetchedProfiles;
@@ -137,7 +171,7 @@ class _MatchingPageState extends State<MatchingPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileInfoPage(profile: profile)),
+                MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
               );
             },
             child: Container(

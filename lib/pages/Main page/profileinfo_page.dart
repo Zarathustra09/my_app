@@ -3,17 +3,49 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProfileInfoPage extends StatefulWidget {
-  final Map<String, dynamic> profile;
+  final String uid;
 
-  const ProfileInfoPage({super.key, required this.profile});
+  const ProfileInfoPage({super.key, required this.uid});
 
   @override
   _ProfileInfoPageState createState() => _ProfileInfoPageState();
 }
 
 class _ProfileInfoPageState extends State<ProfileInfoPage> {
+  Map<String, dynamic>? profile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileByUid(widget.uid);
+  }
+
+  Future<void> _fetchProfileByUid(String uid) async {
+    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    if (doc.exists) {
+      final data = doc.data();
+      final age = data?['birthday'] != null ? _calculateAge(data!['birthday']).toString() : 'Unknown';
+      setState(() {
+        profile = data;
+        profile?['age'] = age;
+        _isLoading = false;
+      });
+    }
+  }
+
+  int _calculateAge(String birthday) {
+    DateTime birthDate = DateTime.parse(birthday);
+    DateTime today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month || (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
   void _showEditAboutDialog() {
-    final TextEditingController _aboutController = TextEditingController(text: widget.profile['about']);
+    final TextEditingController _aboutController = TextEditingController(text: profile?['about']);
 
     showDialog(
       context: context,
@@ -35,11 +67,11 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               onPressed: () async {
                 final user = FirebaseAuth.instance.currentUser;
                 if (user != null) {
-                  await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                  await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
                     'about': _aboutController.text,
                   });
                   setState(() {
-                    widget.profile['about'] = _aboutController.text;
+                    profile?['about'] = _aboutController.text;
                   });
                 }
                 Navigator.of(context).pop();
@@ -54,6 +86,16 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -74,20 +116,20 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               Center(
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundImage: NetworkImage(widget.profile['image'] ?? 'https://via.placeholder.com/150'),
+                  backgroundImage: NetworkImage(profile?['imageUrl'] ?? 'https://via.placeholder.com/150'),
                 ),
               ),
               const SizedBox(height: 16),
               Center(
                 child: Text(
-                  '${widget.profile['name'] ?? 'Unknown'}',
+                  '${profile?['username'] ?? 'Unknown'}',
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  widget.profile['age'] ?? 'Unknown',
+                  profile?['age'] ?? 'Unknown',
                   style: const TextStyle(fontSize: 18, color: Colors.grey),
                 ),
               ),
@@ -99,22 +141,19 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: _showEditAboutDialog,
-                    child: const Icon(Icons.edit, color: Colors.grey),
-                  ),
+                  if (currentUserUid == widget.uid)
+                    GestureDetector(
+                      onTap: _showEditAboutDialog,
+                      child: const Icon(Icons.edit, color: Colors.grey),
+                    ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                widget.profile['about'] ?? 'Emptiness is in here',
+                profile?['about'] ?? 'Emptiness is in here',
                 style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Read more',
-                style: TextStyle(fontSize: 16, color: Colors.pink),
-              ),
               const SizedBox(height: 16),
               const Text(
                 'Interests',
@@ -124,7 +163,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: (widget.profile['interests'] ?? []).map<Widget>((interest) {
+                children: (profile?['interests'] ?? []).map<Widget>((interest) {
                   return Chip(
                     label: Text(interest),
                     backgroundColor: Colors.pink.withOpacity(0.2),
