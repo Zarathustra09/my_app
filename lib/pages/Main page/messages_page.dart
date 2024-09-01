@@ -3,6 +3,7 @@ import 'matching_page.dart'; // Import the MatchingPage
 import 'matches_page.dart'; // Import the MatchesPage
 import '../../services/auth_service.dart'; // Import your AuthService
 import '../themes.dart';
+import 'custom_bottom_navbar.dart';
 
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
@@ -86,46 +87,7 @@ class MessagesPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Matches',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_search),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.logout),
-            label: 'Logout',
-          ),
-        ],
-        currentIndex: 2, // Highlight the "Messages" icon
-        selectedItemColor: AppColors.textHighlight,
-        unselectedItemColor: AppColors.iconUnselected,
-        showUnselectedLabels: true,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MatchesPage()),
-            );
-          } else if (index == 1) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MatchingPage()),
-            );
-          } else if (index == 3) {
-            _showLogoutConfirmation(context);
-          }
-          // The "Messages" button will remain highlighted and unclickable
-        },
-      ),
+      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 2), // Highlight the "Messages" icon
     );
   }
 
