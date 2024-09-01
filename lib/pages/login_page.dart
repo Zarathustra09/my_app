@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/components/my_button.dart';
 import 'package:my_app/components/my_textfield.dart';
-import 'package:my_app/components/square_tile.dart';
+import 'package:my_app/components/square_tile.dart'; // Add this import
 import 'package:my_app/pages/account_setup/verification_page.dart';
 import 'package:my_app/pages/login_register/signup_page.dart' as signup;
-import '../services/auth_service.dart';
+import '../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 import 'account_setup/iam_page.dart';
 
 class LoginPage extends StatelessWidget {
@@ -22,36 +21,23 @@ class LoginPage extends StatelessWidget {
     final authService = AuthService();
     await authService.signin(
       email: usernameController.text,
-      password: passwordController.text,
+      password: usernameController.text,
       context: context,
     );
   }
 
-  // New Google Sign-In method with debugging statements
   signInWithGoogle(BuildContext context) async {
     try {
-      print("Starting Google Sign-In process...");
-
       GoogleSignIn googleSignIn = GoogleSignIn();
       GoogleSignInAccount? googleUser = googleSignIn.currentUser;
 
       if (googleUser != null) {
-        print("Existing Google Sign-In session found. Signing out...");
         await googleSignIn.signOut();
-        print("Signed out of existing Google session.");
-      } else {
-        print("No existing Google Sign-In session found.");
       }
 
-      print("Initiating new Google Sign-In...");
       googleUser = await googleSignIn.signIn();
 
-      if (googleUser == null) {
-        print("Google Sign-In was canceled by the user.");
-        return;
-      }
-
-      print("Google Sign-In successful. User: ${googleUser.displayName}");
+      if (googleUser == null) return;
 
       GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
@@ -60,26 +46,18 @@ class LoginPage extends StatelessWidget {
         idToken: googleAuth.idToken,
       );
 
-      print("Firebase credential obtained, signing in with Firebase...");
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
-      print("Firebase Sign-In successful. Firebase User: ${userCredential.user?.displayName}");
-
-      print("Navigating to IamPage...");
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (BuildContext context) => IamPage(),
         ),
       );
-
-      print("Navigation to IamPage successful.");
     } catch (e) {
       print("Error during Google Sign-In: $e");
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +69,7 @@ class LoginPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 50),
+                const SizedBox(height: 20),
 
                 // logo
                 Image.asset(
@@ -99,7 +77,7 @@ class LoginPage extends StatelessWidget {
                   height: 100,
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
 
                 // welcome back, you've been missed!
                 const Text(
@@ -148,10 +126,11 @@ class LoginPage extends StatelessWidget {
 
                 // sign in button
                 MyButton(
-                  onTap: () => signUserIn(context), // Pass context to signUserIn method
+                  onTap: () => signUserIn(context),
+                  text: 'Sign In',
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
 
                 // or continue with
                 Padding(
@@ -181,21 +160,22 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
 
+                // social media login options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    signup.SquareTile(imagePath: 'lib/images/fb.png'), // Removed const
-                    signup.SquareTile(
+                    SquareTile(imagePath: 'lib/images/fb.png'),
+                    SquareTile(
                       imagePath: 'lib/images/google.png',
-                      onTap: () => signInWithGoogle(context), // Handle Google Sign-In
-                    ), // Removed const because onTap is not a constant expression
-                    signup.SquareTile(imagePath: 'lib/images/apple.png'), // Removed const
+                      onTap: () => signInWithGoogle(context),
+                    ),
+                    SquareTile(imagePath: 'lib/images/apple.png'),
                   ],
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
 
                 // not a member? register now
                 Row(
