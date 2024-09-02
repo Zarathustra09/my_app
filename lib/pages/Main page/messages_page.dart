@@ -1,12 +1,47 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'matching_page.dart'; // Import the MatchingPage
-import 'matches_page.dart'; // Import the MatchesPage
-import '../../services/auth_service.dart'; // Import your AuthService
-import '../themes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/message_service.dart';
+import 'chat_page.dart';
 import 'custom_bottom_navbar.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
-class MessagesPage extends StatelessWidget {
+class MessagesPage extends StatefulWidget {
   const MessagesPage({super.key});
+
+  @override
+  _MessagesPageState createState() => _MessagesPageState();
+}
+
+class _MessagesPageState extends State<MessagesPage> {
+  final MessageService _messageService = MessageService();
+  List<Map<String, dynamic>> _chatParticipants = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchChatParticipants();
+  }
+
+  Future<void> _fetchChatParticipants() async {
+    final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUserUid != null) {
+      final participants = await _messageService.getChatParticipants(currentUserUid);
+      for (var participant in participants) {
+        final profileUserId = participant['sender'] == currentUserUid
+            ? participant['receiver']
+            : participant['sender'];
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(profileUserId).get();
+        participant['imageUrl'] = userDoc.data()?['imageUrl'] ?? 'https://via.placeholder.com/150';
+        participant['username'] = userDoc.data()?['username'] ?? 'Unknown';
+      }
+      setState(() {
+        _chatParticipants = participants;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,159 +65,81 @@ class MessagesPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            const Text(
-              'Activities',
-              style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  ActivityCircle(image: 'lib/images/ca.jpg', name: 'You'),
-                  ActivityCircle(image: 'lib/images/ca.jpg', name: 'Emma'),
-                  ActivityCircle(image: 'lib/images/he.jpg', name: 'Ava'),
-                  ActivityCircle(image: 'lib/images/ca.jpg', name: 'Sophia'),
-                  // Add more ActivityCircle widgets as needed
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Messages',
-              style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: ListView(
-                children: const [
-                  MessageTile(
-                    image: 'lib/images/ca.jpg',
-                    name: 'Emelie',
-                    message: 'Sticker 😍',
-                    time: '23 min',
-                  ),
-                  MessageTile(
-                    image: 'lib/images/ca.jpg',
-                    name: 'Abigail',
-                    message: 'Typing...',
-                    time: '27 min',
-                  ),
-                  MessageTile(
-                    image: 'lib/images/ca.jpg',
-                    name: 'Elizabeth',
-                    message: 'Ok, see you then.',
-                    time: '33 min',
-                  ),
-                  // Add more MessageTile widgets as needed
-                ],
-              ),
-            ),
-          ],
+        child: ListView.builder(
+          itemCount: _chatParticipants.length,
+          itemBuilder: (context, index) {
+            final participant = _chatParticipants[index];
+            final profileUserId = participant['sender'] == FirebaseAuth.instance.currentUser?.uid
+                ? participant['receiver']
+                : participant['sender'];
+            return MessageTile(
+              imageUrl: participant['imageUrl'] ?? 'https://via.placeholder.com/150',
+              name: participant['username'] ?? 'Unknown',
+              message: participant['content'] ?? 'No message',
+              time: participant['timestamp'] != null ? participant['timestamp'].toDate().toString() : DateTime.now().toString(),
+              currentUserId: FirebaseAuth.instance.currentUser?.uid ?? '',
+              profileUserId: profileUserId,
+            );
+          },
         ),
       ),
-      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 2), // Highlight the "Messages" icon
-    );
-  }
-
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Logout Confirmation'),
-          content: const Text('Are you sure you want to log out?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Logout'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _logout(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _logout(BuildContext context) {
-    AuthService().signout(context: context);
-  }
-}
-
-class ActivityCircle extends StatelessWidget {
-  final String image;
-  final String name;
-
-  const ActivityCircle({
-    Key? key,
-    required this.image,
-    required this.name,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5.0),
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundImage: AssetImage(image),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            name,
-            style: const TextStyle(fontSize: 12, color: Colors.black),
-          ),
-        ],
-      ),
+      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 2),
     );
   }
 }
 
 class MessageTile extends StatelessWidget {
-  final String image;
+  final String imageUrl;
   final String name;
   final String message;
   final String time;
+  final String currentUserId;
+  final String profileUserId;
 
   const MessageTile({
     Key? key,
-    required this.image,
+    required this.imageUrl,
     required this.name,
     required this.message,
     required this.time,
+    required this.currentUserId,
+    required this.profileUserId,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundImage: AssetImage(image),
+        backgroundImage: NetworkImage(imageUrl.isNotEmpty ? imageUrl : 'https://via.placeholder.com/150'),
       ),
       title: Text(
-        name,
+        name.isNotEmpty ? name : 'Unknown',
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      subtitle: Text(message),
+      subtitle: Text(
+        message.isNotEmpty ? message : 'No message',
+      ),
       trailing: Text(
-        time,
+        timeago.format(DateTime.parse(time.isNotEmpty ? time : DateTime.now().toString())),
         style: const TextStyle(color: Colors.grey),
       ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatPage(
+              name: name,
+              image: imageUrl,
+              currentUserId: currentUserId,
+              profileUserId: profileUserId,
+            ),
+          ),
+        );
+      },
     );
   }
 }

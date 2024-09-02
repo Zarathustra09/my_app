@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'chat_page.dart'; // Import the ChatPage
 
 class ProfileInfoPage extends StatefulWidget {
   final String uid;
@@ -106,6 +107,24 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
           style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatPage(
+                    name: profile?['username'] ?? 'Unknown',
+                    image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
+                    currentUserId: currentUserUid!,
+                    profileUserId: widget.uid,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
