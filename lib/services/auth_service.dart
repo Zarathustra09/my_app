@@ -18,14 +18,14 @@ class AuthService {
         password: password,
       );
 
-      await Future.delayed(const Duration(seconds: 1));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (BuildContext context) => const IamPage(),
-        ),
-      );
-
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) => const IamPage(),
+          ),
+        );
+      });
     } on FirebaseAuthException catch (e) {
       String message = '';
       if (e.code == 'weak-password') {
@@ -50,14 +50,14 @@ class AuthService {
         password: password,
       );
 
-      await Future.delayed(const Duration(seconds: 1));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (BuildContext context) => const IamPage(),
-        ),
-      );
-
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) => const IamPage(),
+          ),
+        );
+      });
     } on FirebaseAuthException catch (e) {
       String message = '';
       if (e.code == 'invalid-email') {
@@ -85,17 +85,16 @@ class AuthService {
     }
 
     await FirebaseAuth.instance.signOut();
-    await Future.delayed(const Duration(seconds: 1));
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) => LoginPage(),
-      ),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) => LoginPage(),
+        ),
+      );
+    });
   }
-
-
 
   void _showToast(String message) {
     Fluttertoast.showToast(
