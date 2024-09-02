@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // Import the intl package for date formatting
-import 'profileinfo_page.dart'; // Import the ProfileInfoPage
+import 'package:intl/intl.dart';
+import 'messages_page.dart';
+import 'profileinfo_page.dart';
 
 class ChatPage extends StatefulWidget {
   final String name;
@@ -55,6 +56,15 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => MessagesPage()),
+            );
+          },
+        ),
         title: Row(
           children: [
             CircleAvatar(
@@ -77,7 +87,7 @@ class _ChatPageState extends State<ChatPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 8.0), // Add padding here
+            padding: const EdgeInsets.only(top: 8.0),
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -97,40 +107,58 @@ class _ChatPageState extends State<ChatPage> {
                       (data['sender'] == widget.profileUserId && data['receiver'] == widget.currentUserId);
                 }).toList();
 
-                return ListView.builder(
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index].data() as Map<String, dynamic>;
-                    final isSender = message['sender'] == widget.currentUserId;
-                    final timestamp = (message['timestamp'] as Timestamp).toDate();
-                    final formattedTime = DateFormat('hh:mm a').format(timestamp);
+                List<List<Map<String, dynamic>>> groupedMessages = [];
+                for (var message in messages) {
+                  final messageData = message.data() as Map<String, dynamic>;
+                  final timestamp = messageData['timestamp'] != null ? (messageData['timestamp'] as Timestamp).toDate() : DateTime.now();
+                  if (groupedMessages.isEmpty || timestamp.difference((groupedMessages.last.last['timestamp'] as Timestamp).toDate()).inMinutes > 5) {
+                    groupedMessages.add([messageData]);
+                  } else {
+                    groupedMessages.last.add(messageData);
+                  }
+                }
 
+                return ListView.builder(
+                  itemCount: groupedMessages.length,
+                  itemBuilder: (context, index) {
+                    final group = groupedMessages[index];
                     return Column(
-                      crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                      children: [
-                        Align(
-                          alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Container(
-                            padding: EdgeInsets.all(10),
-                            margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: isSender ? Colors.blue : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(10),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: group.map((message) {
+                        final isSender = message['sender'] == widget.currentUserId;
+                        final timestamp = message['timestamp'] != null ? (message['timestamp'] as Timestamp).toDate() : DateTime.now();
+                        final formattedTime = DateFormat('hh:mm a').format(timestamp);
+                        final showTimestamp = group.first == message;
+
+                        return Column(
+                          crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            Align(
+                              alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
+                              child: Container(
+                                padding: EdgeInsets.all(10),
+                                margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: isSender ? Colors.blue : Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  message['content'],
+                                  style: TextStyle(color: isSender ? Colors.white : Colors.black),
+                                ),
+                              ),
                             ),
-                            child: Text(
-                              message['content'],
-                              style: TextStyle(color: isSender ? Colors.white : Colors.black),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            formattedTime,
-                            style: TextStyle(color: Colors.grey, fontSize: 10),
-                          ),
-                        ),
-                      ],
+                            if (showTimestamp)
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: Text(
+                                  formattedTime,
+                                  style: TextStyle(color: Colors.grey, fontSize: 10),
+                                ),
+                              ),
+                          ],
+                        );
+                      }).toList(),
                     );
                   },
                 );
