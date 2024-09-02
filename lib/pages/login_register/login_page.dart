@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/components/my_button.dart';
 import 'package:my_app/components/my_textfield.dart';
-import 'package:my_app/components/square_tile.dart';
+import 'package:my_app/components/square_tile.dart'; // Add this import
 import 'package:my_app/pages/account_setup/verification_page.dart';
 import 'package:my_app/pages/login_register/signup_page.dart' as signup;
 import '../../services/auth_service.dart';
@@ -22,7 +22,7 @@ class LoginPage extends StatelessWidget {
     final authService = AuthService();
     await authService.signin(
       email: usernameController.text,
-      password: passwordController.text,
+      password: usernameController.text,
       context: context,
     );
   }
@@ -128,6 +128,7 @@ class LoginPage extends StatelessWidget {
                 // sign in button
                 MyButton(
                   onTap: () => signUserIn(context),
+                  text: 'Sign In',
                 ),
 
                 const SizedBox(height: 30),
@@ -166,12 +167,12 @@ class LoginPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    signup.SquareTile(imagePath: 'lib/images/fb.png'),
-                    signup.SquareTile(
+                    SquareTile(imagePath: 'lib/images/fb.png'),
+                    SquareTile(
                       imagePath: 'lib/images/google.png',
                       onTap: () => signInWithGoogle(context),
                     ),
-                    signup.SquareTile(imagePath: 'lib/images/apple.png'),
+                    SquareTile(imagePath: 'lib/images/apple.png'),
                   ],
                 ),
 
