@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart'; // Import the intl package for date formatting
+import 'profileinfo_page.dart'; // Import the ProfileInfoPage
 
 class ChatPage extends StatefulWidget {
   final String name;
@@ -40,17 +42,43 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  void _navigateToProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileInfoPage(uid: widget.profileUserId),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.name),
+        title: Row(
+          children: [
+            CircleAvatar(
+              backgroundImage: NetworkImage(widget.image),
+            ),
+            SizedBox(width: 10),
+            Text(widget.name),
+          ],
+        ),
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black),
         titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.info),
+            onPressed: _navigateToProfile,
+          ),
+        ],
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0), // Add padding here
+          ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -74,20 +102,35 @@ class _ChatPageState extends State<ChatPage> {
                   itemBuilder: (context, index) {
                     final message = messages[index].data() as Map<String, dynamic>;
                     final isSender = message['sender'] == widget.currentUserId;
-                    return Align(
-                      alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: isSender ? Colors.blue : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
+                    final timestamp = (message['timestamp'] as Timestamp).toDate();
+                    final formattedTime = DateFormat('hh:mm a').format(timestamp);
+
+                    return Column(
+                      crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            padding: EdgeInsets.all(10),
+                            margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: isSender ? Colors.blue : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              message['content'],
+                              style: TextStyle(color: isSender ? Colors.white : Colors.black),
+                            ),
+                          ),
                         ),
-                        child: Text(
-                          message['content'],
-                          style: TextStyle(color: isSender ? Colors.white : Colors.black),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            formattedTime,
+                            style: TextStyle(color: Colors.grey, fontSize: 10),
+                          ),
                         ),
-                      ),
+                      ],
                     );
                   },
                 );
