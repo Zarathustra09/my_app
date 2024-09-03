@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:my_app/components/my_button.dart';
 import 'package:my_app/components/my_textfield.dart';
 import 'package:my_app/components/square_tile.dart';
+import 'package:my_app/pages/Main%20page/matching_page.dart';
 import 'package:my_app/pages/account_setup/verification_page.dart';
 import 'package:my_app/pages/login_register/signup_page.dart' as signup;
-import 'package:my_app/pages/login_register/forgot_password_page.dart'; // Add this import
+import 'package:my_app/pages/login_register/forgot_password_page.dart';
 import '../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../account_setup/iam_page.dart';
+import '../account_setup/getusername_page.dart';
+import '../account_setup/yourinterest_page.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -23,6 +26,29 @@ class LoginPage extends StatelessWidget {
       password: usernameController.text,
       context: context,
     );
+
+    final userData = await authService.checkUserData();
+    if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => GetUsernamePage()),
+      );
+    } else if (!userData['hasGender']!) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => IamPage()),
+      );
+    } else if (!userData['hasInterests']!) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => YourInterestsPage()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MatchingPage()),
+      );
+    }
   }
 
   signInWithGoogle(BuildContext context) async {
@@ -47,12 +73,28 @@ class LoginPage extends StatelessWidget {
 
       await FirebaseAuth.instance.signInWithCredential(credential);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (BuildContext context) => IamPage(),
-        ),
-      );
+      final userData = await AuthService().checkUserData();
+      if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => GetUsernamePage()),
+        );
+      } else if (!userData['hasGender']!) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => IamPage()),
+        );
+      } else if (!userData['hasInterests']!) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => YourInterestsPage()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MatchingPage()),
+        );
+      }
     } catch (e) {
       print("Error during Google Sign-In: $e");
     }

@@ -1,8 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../pages/Main page/matching_page.dart';
+import '../pages/account_setup/getusername_page.dart';
 import '../pages/account_setup/iam_page.dart';
+import '../pages/account_setup/yourinterest_page.dart';
 import '../pages/login_register/login_page.dart';
 import '../pages/Main page/matches_page.dart';
 
@@ -50,14 +54,44 @@ class AuthService {
         password: password,
       );
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) => const IamPage(),
-          ),
-        );
-      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          final userData = {
+            'hasBirthday': data['birthday'] != null,
+            'hasImageUrl': data['imageUrl'] != null,
+            'hasUsername': data['username'] != null,
+            'hasGender': data['gender'] != null,
+            'hasInterests': data['interests'] != null && (data['interests'] as List).isNotEmpty,
+          };
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => GetUsernamePage()),
+              );
+            } else if (!userData['hasGender']!) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => IamPage()),
+              );
+            } else if (!userData['hasInterests']!) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => YourInterestsPage()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MatchingPage()),
+              );
+            }
+          });
+        }
+      }
     } on FirebaseAuthException catch (e) {
       String message = '';
       if (e.code == 'invalid-email') {
@@ -109,5 +143,29 @@ class AuthService {
       webBgColor: "linear-gradient(to right, #FF4081, #F50057)", // Gradient for web
       webPosition: "center",
     );
+  }
+
+  Future<Map<String, bool>> checkUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        return {
+          'hasBirthday': data['birthday'] != null,
+          'hasImageUrl': data['imageUrl'] != null,
+          'hasUsername': data['username'] != null,
+          'hasGender': data['gender'] != null,
+          'hasInterests': data['interests'] != null && (data['interests'] as List).isNotEmpty,
+        };
+      }
+    }
+    return {
+      'hasBirthday': false,
+      'hasImageUrl': false,
+      'hasUsername': false,
+      'hasGender': false,
+      'hasInterests': false,
+    };
   }
 }

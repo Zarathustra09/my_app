@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:my_app/pages/Main%20page/matching_page.dart';
 import 'notification_pages.dart'; // Updated import to notification_pages.dart
 
 class YourInterestsPage extends StatefulWidget {
@@ -43,7 +44,7 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
         // Redirect to NotificationPage if interests data exists
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => EnableNotificationsPage()), // Updated to NotificationPage
+          MaterialPageRoute(builder: (context) => MatchingPage()), // Updated to NotificationPage
         );
       } else {
         setState(() {
