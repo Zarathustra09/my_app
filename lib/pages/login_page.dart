@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/components/my_button.dart';
 import 'package:my_app/components/my_textfield.dart';
-import 'package:my_app/components/square_tile.dart'; // Add this import
+import 'package:my_app/components/square_tile.dart';
 import 'package:my_app/pages/account_setup/verification_page.dart';
 import 'package:my_app/pages/login_register/signup_page.dart' as signup;
+import 'package:my_app/pages/login_register/forgot_password_page.dart'; // Add this import
 import '../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -12,11 +13,9 @@ import 'account_setup/iam_page.dart';
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
-  // text editing controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // sign user in method
   void signUserIn(BuildContext context) async {
     final authService = AuthService();
     await authService.signin(
@@ -70,16 +69,11 @@ class LoginPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-
-                // logo
                 Image.asset(
                   'lib/images/logo.png',
                   height: 100,
                 ),
-
                 const SizedBox(height: 30),
-
-                // welcome back, you've been missed!
                 const Text(
                   'Greetings!',
                   style: TextStyle(
@@ -87,52 +81,45 @@ class LoginPage extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
-
                 const SizedBox(height: 25),
-
-                // username textfield
                 MyTextField(
                   controller: usernameController,
                   hintText: 'Username',
                   obscureText: false,
                 ),
-
                 const SizedBox(height: 10),
-
-                // password textfield
                 MyTextField(
                   controller: passwordController,
                   hintText: 'Password',
                   obscureText: true,
                 ),
-
                 const SizedBox(height: 10),
-
-                // forgot password?
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
-                    children: const [
-                      Text(
-                        'Forgot Password?',
-                        style: TextStyle(color: Colors.black),
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                          );
+                        },
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(color: Colors.black),
+                        ),
                       ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 25),
-
-                // sign in button
                 MyButton(
                   onTap: () => signUserIn(context),
                   text: 'Sign In',
                 ),
-
                 const SizedBox(height: 30),
-
-                // or continue with
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
@@ -159,10 +146,7 @@ class LoginPage extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // social media login options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -174,10 +158,7 @@ class LoginPage extends StatelessWidget {
                     SquareTile(imagePath: 'lib/images/apple.png'),
                   ],
                 ),
-
                 const SizedBox(height: 30),
-
-                // not a member? register now
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

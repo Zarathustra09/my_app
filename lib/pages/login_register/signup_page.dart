@@ -6,6 +6,8 @@ import '../../services/auth_service.dart';
 import 'package:my_app/components/my_button.dart';
 import 'package:my_app/components/my_textfield.dart';
 import 'package:my_app/components/square_tile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class SignUpPage extends StatelessWidget {
   SignUpPage({super.key});
@@ -31,6 +33,40 @@ class SignUpPage extends StatelessWidget {
       password: passwordController.text,
       context: context,
     );
+  }
+
+  // Google sign-in method
+  Future<void> signInWithGoogle(BuildContext context) async {
+    try {
+      GoogleSignIn googleSignIn = GoogleSignIn();
+      GoogleSignInAccount? googleUser = googleSignIn.currentUser;
+
+      if (googleUser != null) {
+        await googleSignIn.signOut();
+      }
+
+      googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) return;
+
+      GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) => IamPage(),
+        ),
+      );
+    } catch (e) {
+      print("Error during Google Sign-In: $e");
+    }
   }
 
   @override
@@ -133,10 +169,13 @@ class SignUpPage extends StatelessWidget {
                 // Social media sign up buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     SquareTile(imagePath: 'lib/images/fb.png'),
                     SizedBox(width: 25),
-                    SquareTile(imagePath: 'lib/images/google.png'),
+                    SquareTile(
+                      imagePath: 'lib/images/google.png',
+                      onTap: () => signInWithGoogle(context),
+                    ),
                     SizedBox(width: 25),
                     SquareTile(imagePath: 'lib/images/apple.png'),
                   ],

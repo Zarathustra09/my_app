@@ -27,11 +27,14 @@ class _ChatPageState extends State<ChatPage> {
 
   void _sendMessage() async {
     if (_controller.text.isNotEmpty) {
+      final now = DateTime.now();
+      final philippineTime = now.toUtc().add(Duration(hours: 8)); // Convert to Philippine Time (PHT)
+
       final messageData = {
         'sender': widget.currentUserId,
         'receiver': widget.profileUserId,
         'content': _controller.text,
-        'timestamp': FieldValue.serverTimestamp(),
+        'timestamp': Timestamp.fromDate(philippineTime),
         'participants': [widget.currentUserId, widget.profileUserId],
       };
 
