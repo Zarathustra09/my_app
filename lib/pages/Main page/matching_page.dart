@@ -6,6 +6,8 @@ import 'profileinfo_page.dart';
 import 'messages_page.dart';
 import 'matches_page.dart';
 import '../themes.dart';
+import 'heart_dislike_function.dart'; // Import the function
+import 'custom_bottom_navbar.dart';  // Import the CustomBottomNavBar
 
 class MatchingPage extends StatefulWidget {
   const MatchingPage({super.key});
@@ -45,7 +47,6 @@ class _MatchingPageState extends State<MatchingPage> {
     return score;
   }
 
-  // Update _fetchProfiles method in MatchingPage
   Future<void> _fetchProfiles() async {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -79,62 +80,6 @@ class _MatchingPageState extends State<MatchingPage> {
     }
   }
 
-  void _onItemTapped(int index) {
-    if (index == 3) {
-      _showLogoutConfirmation();
-    } else if (index != 1) {
-      setState(() {
-        _selectedIndex = index;
-      });
-
-      switch (index) {
-        case 0:
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MatchesPage()),
-          );
-          break;
-        case 2:
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MessagesPage()),
-          );
-          break;
-      }
-    }
-  }
-
-  void _logout() {
-    AuthService().signout(context: context);
-  }
-
-  void _showLogoutConfirmation() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Logout Confirmation'),
-          content: const Text('Are you sure you want to log out?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Logout'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _logout();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -160,94 +105,89 @@ class _MatchingPageState extends State<MatchingPage> {
         ),
         centerTitle: true,
       ),
-      body: PageView.builder(
-        itemCount: _profiles.length,
-        itemBuilder: (context, index) {
-          final profile = _profiles[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                      blurRadius: 10,
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 5),
-                ],
-                image: DecorationImage(
-                  image: NetworkImage(profile['image']),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(16),
-                      ),
-                      color: Colors.black.withOpacity(0.6),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${profile['name']}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    itemCount: _profiles.length,
+                    itemBuilder: (context, index) {
+                      final profile = _profiles[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 10,
+                                  color: Colors.grey.withOpacity(0.5),
+                                  spreadRadius: 5),
+                            ],
+                            image: DecorationImage(
+                              image: NetworkImage(profile['image']),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(16),
+                                    bottomRight: Radius.circular(16),
+                                  ),
+                                  color: Colors.black.withOpacity(0.6),
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${profile['name']}',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      profile['age'],
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 18),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        Text(
-                          profile['age'],
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 18),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+                
+                buildActionButtons(
+                  onDislike: () {
+                    // Handle dislike action
+                  },
+                  onHeart: () {
+                    // Handle heart action
+                  },
+                  onStar: () {
+                    // Handle star action
+                  },
+                ),
+              ],
             ),
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.navbarBackground,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Matches',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_search),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.logout),
-            label: 'Logout',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.textHighlight,
-        unselectedItemColor: AppColors.iconUnselected,
-        showUnselectedLabels: true,
-        onTap: _onItemTapped,
-      ),
+      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1), // Highlight the "Matches" icon
     );
   }
 }
