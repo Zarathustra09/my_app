@@ -1,6 +1,8 @@
 // lib/services/matching_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class MatchingService {
   Future<void> saveLikedUser(String likedUserId) async {
@@ -70,6 +72,17 @@ class MatchingService {
       }).toList();
     }
     return [];
+  }
+
+  Future<void> cacheMatches(List<Map<String, dynamic>> matches) async {
+    final prefs = await SharedPreferences.getInstance();
+    final matchesJson = matches.map((match) => jsonEncode(match)).toList(); // Convert each match to a JSON string
+    await prefs.setStringList('cachedMatches', matchesJson);
+  }
+  Future<List<Map<String, dynamic>>> getCachedMatches() async {
+    final prefs = await SharedPreferences.getInstance();
+    final matchesJson = prefs.getStringList('cachedMatches') ?? [];
+    return matchesJson.map((match) => jsonDecode(match) as Map<String, dynamic>).toList(); // Decode each JSON string back to a Map
   }
 
   int _calculateAge(String birthday) {
