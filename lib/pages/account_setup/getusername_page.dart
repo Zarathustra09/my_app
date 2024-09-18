@@ -88,11 +88,31 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
     }
   }
 
+  bool isValidAge(String birthday) {
+    final birthDate = DateTime.parse(birthday);
+    final currentDate = DateTime.now();
+    final age = currentDate.year - birthDate.year;
+    if (currentDate.month < birthDate.month || (currentDate.month == birthDate.month && currentDate.day < birthDate.day)) {
+      return age > 18;
+    }
+    return age >= 18;
+  }
+
   Future<void> _onContinueTap() async {
     final username = _usernameController.text.trim();
     final birthday = _birthdayController.text.trim();
 
     if (username.isNotEmpty && _imageFile != null) {
+      if (!isValidAge(birthday)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('You must be 18 years old or above'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() {
         _isLoading = true;
       });
@@ -113,17 +133,12 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
           final imageUrl = await _uploadImage(_imageFile!);
 
           if (imageUrl != null) {
-            // Save the username, birthday, and image URL to Firestore
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .set({
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
               'username': username,
               'birthday': birthday,
               'imageUrl': imageUrl,
-            }, SetOptions(merge: true));
+            });
 
-            // Navigate to YourInterestsPage
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => YourInterestsPage()),
@@ -137,10 +152,9 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
             );
           }
         } else {
-          // Handle the case where no user is logged in
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('No user is logged in'),
+              content: const Text('No user logged in'),
               backgroundColor: Colors.red,
             ),
           );
