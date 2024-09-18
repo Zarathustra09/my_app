@@ -1,13 +1,19 @@
+// lib/pages/Main%20page/matching_page.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import '../../components/toaster.dart';
 import '../../services/auth_service.dart';
+import '../../services/matching_service.dart';
+import 'package:my_app/components/toaster.dart';
 import 'profileinfo_page.dart';
 import 'messages_page.dart';
 import 'matches_page.dart';
 import '../themes.dart';
-import 'heart_dislike_function.dart'; // Import the function
-import 'custom_bottom_navbar.dart';  // Import the CustomBottomNavBar
+import 'heart_dislike_function.dart';
+import 'custom_bottom_navbar.dart';
 
 class MatchingPage extends StatefulWidget {
   const MatchingPage({super.key});
@@ -20,6 +26,10 @@ class _MatchingPageState extends State<MatchingPage> {
   List<Map<String, dynamic>> _profiles = [];
   bool _isLoading = true;
   int _selectedIndex = 1;
+  bool _isHearted = false;
+  final MatchingService _matchingService = MatchingService();
+  final int _pageSize = 10; // Number of profiles to load per page
+  DocumentSnapshot? _lastDocument; // Last document snapshot for pagination
 
   @override
   void initState() {
@@ -27,57 +37,27 @@ class _MatchingPageState extends State<MatchingPage> {
     _fetchProfiles();
   }
 
-  int _calculateAge(String birthday) {
-    DateTime birthDate = DateTime.parse(birthday);
-    DateTime today = DateTime.now();
-    int age = today.year - birthDate.year;
-    if (today.month < birthDate.month || (today.month == birthDate.month && today.day < birthDate.day)) {
-      age--;
-    }
-    return age;
-  }
-
-  int _calculateMatchScore(List<dynamic> userInterests, List<dynamic> profileInterests) {
-    int score = 0;
-    for (var interest in userInterests) {
-      if (profileInterests.contains(interest)) {
-        score++;
-      }
-    }
-    return score;
-  }
-
   Future<void> _fetchProfiles() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final fetchedProfiles = await _matchingService.fetchProfiles(_pageSize, _lastDocument);
+    setState(() {
+      _profiles.addAll(fetchedProfiles);
+      _isLoading = false;
+    });
+  }
 
-    if (user != null) {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final userInterests = userDoc.data()?['interests'] ?? [];
-      final currentUserUid = user.uid;
-
-      final snapshot = await FirebaseFirestore.instance.collection('users').get();
-      final List<Map<String, dynamic>> fetchedProfiles = snapshot.docs.map((doc) {
-        final data = doc.data();
-        final age = data['birthday'] != null ? _calculateAge(data['birthday']).toString() : 'Unknown';
-        final matchScore = _calculateMatchScore(userInterests, data['interests'] ?? []);
-        return {
-          'name': data['username'] ?? 'Unknown',
-          'age': age ?? 'Unknown',
-          'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
-          'interests': data['interests'] ?? [],
-          'about': data['about'] ?? 'No information',
-          'uid': doc.id,
-          'matchScore': matchScore,
-        };
-      }).where((profile) => profile['uid'] != currentUserUid).toList();
-
-      fetchedProfiles.sort((a, b) => b['matchScore'].compareTo(a['matchScore']));
-
-      setState(() {
-        _profiles = fetchedProfiles;
-        _isLoading = false;
-      });
+  void _onHeart(String likedUserId) {
+    setState(() {
+      _isHearted = !_isHearted;
+    });
+    if (_isHearted) {
+      _matchingService.saveLikedUser(likedUserId);
+      Toaster.showToast("User liked!");
     }
+  }
+
+  void _onStar(String starredUserId) {
+    _matchingService.saveStarredUser(starredUserId);
+    Toaster.showToast("User starred!");
   }
 
   @override
@@ -108,86 +88,90 @@ class _MatchingPageState extends State<MatchingPage> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Column(
-              children: [
-                Expanded(
-                  child: PageView.builder(
-                    itemCount: _profiles.length,
-                    itemBuilder: (context, index) {
-                      final profile = _profiles[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
-                          );
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+        children: [
+          Expanded(
+            child: PageView.builder(
+              itemCount: _profiles.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+                if (index == _profiles.length - 1) {
+                  _fetchProfiles(); // Load more profiles when reaching the end
+                }
+              },
+              itemBuilder: (context, index) {
+                final profile = _profiles[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                            blurRadius: 10,
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 5),
+                      ],
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(profile['image']),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                  blurRadius: 10,
-                                  color: Colors.grey.withOpacity(0.5),
-                                  spreadRadius: 5),
-                            ],
-                            image: DecorationImage(
-                              image: NetworkImage(profile['image']),
-                              fit: BoxFit.cover,
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
                             ),
+                            color: Colors.black.withOpacity(0.6),
                           ),
+                          padding: const EdgeInsets.all(16),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.only(
-                                    bottomLeft: Radius.circular(16),
-                                    bottomRight: Radius.circular(16),
-                                  ),
-                                  color: Colors.black.withOpacity(0.6),
-                                ),
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${profile['name']}',
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      profile['age'],
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 18),
-                                    ),
-                                  ],
-                                ),
+                              Text(
+                                '${profile['name']}',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                profile['age'],
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 18),
                               ),
                             ],
                           ),
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
-                ),
-                
-                buildActionButtons(
-                  onDislike: () {
-                    // Handle dislike action
-                  },
-                  onHeart: () {
-                    // Handle heart action
-                  },
-                  onStar: () {
-                    // Handle star action
-                  },
-                ),
-              ],
+                );
+              },
             ),
-      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1), // Highlight the "Matches" icon
+          ),
+
+          buildActionButtons(
+            onDislike: () {
+              // Handle dislike action
+            },
+            onHeart: () => _onHeart(_profiles[_selectedIndex]['uid']),
+            onStar: () => _onStar(_profiles[_selectedIndex]['uid']),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1),
     );
   }
 }
