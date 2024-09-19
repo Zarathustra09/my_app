@@ -5,15 +5,107 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class MatchingService {
-  Future<void> saveLikedUser(String likedUserId) async {
+  Future<void> saveHeartedUser(String heartedUserId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance.collection('likes').add({
-        'likedBy': user.uid,
-        'likedUser': likedUserId,
+      await FirebaseFirestore.instance.collection('hearts').add({
+        'heartedBy': user.uid,
+        'heartedUser': heartedUserId,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
+      // Increment the number of hearts for the hearted user
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(heartedUserId);
+      await userDoc.update({
+        'heartsCount': FieldValue.increment(1),
+      });
     }
+  }
+
+  Future<void> deleteHeartedUser(String heartedUserId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('hearts')
+          .where('heartedBy', isEqualTo: user.uid)
+          .where('heartedUser', isEqualTo: heartedUserId)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Decrement the number of hearts for the hearted user
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(heartedUserId);
+      await userDoc.update({
+        'heartsCount': FieldValue.increment(-1),
+      });
+    }
+  }
+
+  Future<bool> isUserHearted(String heartedUserId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('hearts')
+          .where('heartedBy', isEqualTo: user.uid)
+          .where('heartedUser', isEqualTo: heartedUserId)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    }
+    return false;
+  }
+
+  int _calculateMatchScore(List<dynamic> userInterests, List<dynamic> profileInterests, int heartsCount) {
+    int score = 0;
+    for (var interest in userInterests) {
+      if (profileInterests.contains(interest)) {
+        score++;
+      }
+    }
+    // Include hearts count in the match score
+    score += heartsCount;
+    return score;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchProfiles(int pageSize, DocumentSnapshot? lastDocument) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final userInterests = userDoc.data()?['interests'] ?? [];
+      final currentUserUid = user.uid;
+
+      QuerySnapshot snapshot;
+      if (lastDocument == null) {
+        snapshot = await FirebaseFirestore.instance.collection('users').limit(pageSize).get();
+      } else {
+        snapshot = await FirebaseFirestore.instance.collection('users').startAfterDocument(lastDocument).limit(pageSize).get();
+      }
+
+      if (snapshot.docs.isNotEmpty) {
+        lastDocument = snapshot.docs.last;
+      }
+
+      final List<Map<String, dynamic>> fetchedProfiles = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final age = data['birthday'] != null ? _calculateAge(data['birthday']).toString() : 'Unknown';
+        final matchScore = _calculateMatchScore(userInterests, data['interests'] ?? [], data['heartsCount'] ?? 0);
+        return {
+          'name': data['username'] ?? 'Unknown',
+          'age': age ?? 'Unknown',
+          'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
+          'interests': data['interests'] ?? [],
+          'about': data['about'] ?? 'No information',
+          'uid': doc.id,
+          'matchScore': matchScore,
+        };
+      }).where((profile) => profile['uid'] != currentUserUid).toList();
+
+      fetchedProfiles.sort((a, b) => b['matchScore'].compareTo(a['matchScore']));
+
+      return fetchedProfiles;
+    }
+    return [];
   }
 
 
@@ -138,56 +230,6 @@ class MatchingService {
     return false;
   }
 
-  int _calculateMatchScore(List<dynamic> userInterests, List<dynamic> profileInterests) {
-    int score = 0;
-    for (var interest in userInterests) {
-      if (profileInterests.contains(interest)) {
-        score++;
-      }
-    }
-    return score;
-  }
-
-  Future<List<Map<String, dynamic>>> fetchProfiles(int pageSize, DocumentSnapshot? lastDocument) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final userInterests = userDoc.data()?['interests'] ?? [];
-      final currentUserUid = user.uid;
-
-      QuerySnapshot snapshot;
-      if (lastDocument == null) {
-        snapshot = await FirebaseFirestore.instance.collection('users').limit(pageSize).get();
-      } else {
-        snapshot = await FirebaseFirestore.instance.collection('users').startAfterDocument(lastDocument).limit(pageSize).get();
-      }
-
-      if (snapshot.docs.isNotEmpty) {
-        lastDocument = snapshot.docs.last;
-      }
-
-      final List<Map<String, dynamic>> fetchedProfiles = snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        final age = data['birthday'] != null ? _calculateAge(data['birthday']).toString() : 'Unknown';
-        final matchScore = _calculateMatchScore(userInterests, data['interests'] ?? []);
-        return {
-          'name': data['username'] ?? 'Unknown',
-          'age': age ?? 'Unknown',
-          'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
-          'interests': data['interests'] ?? [],
-          'about': data['about'] ?? 'No information',
-          'uid': doc.id,
-          'matchScore': matchScore,
-        };
-      }).where((profile) => profile['uid'] != currentUserUid).toList();
-
-      fetchedProfiles.sort((a, b) => b['matchScore'].compareTo(a['matchScore']));
-
-      return fetchedProfiles;
-    }
-    return [];
-  }
-
   Future<void> saveLastViewedProfileIndex(int index) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('lastViewedProfileIndex', index);
@@ -196,5 +238,39 @@ class MatchingService {
   Future<int> getLastViewedProfileIndex() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt('lastViewedProfileIndex') ?? 0;
+  }
+
+  Future<bool> isUserLiked(String likedUserId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('likes')
+          .where('likedBy', isEqualTo: user.uid)
+          .where('likedUser', isEqualTo: likedUserId)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    }
+    return false;
+  }
+
+  Future<void> deleteLikedUser(String likedUserId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('likes')
+          .where('likedBy', isEqualTo: user.uid)
+          .where('likedUser', isEqualTo: likedUserId)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Decrement the number of likes for the liked user
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(likedUserId);
+      await userDoc.update({
+        'likesCount': FieldValue.increment(-1),
+      });
+    }
   }
 }

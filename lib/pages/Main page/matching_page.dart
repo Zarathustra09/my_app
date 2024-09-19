@@ -32,7 +32,7 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
   final int _pageSize = 10; // Number of profiles to load per page
   DocumentSnapshot? _lastDocument; // Last document snapshot for pagination
   Map<String, bool> _starredStatus = {}; // Cache starred status
-
+  Map<String, bool> _heartedStatus = {}; // Cache hearted status
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -75,6 +75,7 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
     final fetchedProfiles = await _matchingService.fetchProfiles(_pageSize, _lastDocument);
     for (var profile in fetchedProfiles) {
       _starredStatus[profile['uid']] = await _matchingService.isUserStarred(profile['uid']);
+      _heartedStatus[profile['uid']] = await _matchingService.isUserHearted(profile['uid']);
     }
     setState(() {
       _profiles.addAll(fetchedProfiles);
@@ -82,13 +83,20 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
     });
   }
 
-  void _onHeart(String likedUserId) {
-    setState(() {
-      _isHearted = !_isHearted;
-    });
-    if (_isHearted) {
-      _matchingService.saveLikedUser(likedUserId);
-      Toaster.showToast("User liked!");
+  void _onHeart(String heartedUserId) async {
+    final isHearted = await _matchingService.isUserHearted(heartedUserId);
+    if (isHearted) {
+      await _matchingService.deleteHeartedUser(heartedUserId);
+      Toaster.showToast("User unhearted!");
+      setState(() {
+        _heartedStatus[heartedUserId] = false;
+      });
+    } else {
+      await _matchingService.saveHeartedUser(heartedUserId);
+      Toaster.showToast("User hearted!");
+      setState(() {
+        _heartedStatus[heartedUserId] = true;
+      });
     }
   }
 
@@ -162,6 +170,7 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
               itemBuilder: (context, index) {
                 final profile = _profiles[index];
                 final isStarred = _starredStatus[profile['uid']] ?? false;
+                final isHearted = _heartedStatus[profile['uid']] ?? false;
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -228,6 +237,7 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
             onHeart: () => _onHeart(_profiles[_selectedIndex]['uid']),
             onStar: () => _onStar(_profiles[_selectedIndex]['uid']),
             isStarred: _starredStatus[_profiles[_selectedIndex]['uid']] ?? false, // Pass the starred status
+            isHearted: _heartedStatus[_profiles[_selectedIndex]['uid']] ?? false, // Pass the hearted status
           ),
         ],
       ),
