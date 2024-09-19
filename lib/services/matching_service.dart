@@ -187,4 +187,14 @@ class MatchingService {
     }
     return [];
   }
+
+  Future<void> saveLastViewedProfileIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('lastViewedProfileIndex', index);
+  }
+
+  Future<int> getLastViewedProfileIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('lastViewedProfileIndex') ?? 0;
+  }
 }

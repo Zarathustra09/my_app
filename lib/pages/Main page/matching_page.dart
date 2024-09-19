@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../components/toaster.dart';
 import '../../services/auth_service.dart';
 import '../../services/matching_service.dart';
@@ -22,7 +23,7 @@ class MatchingPage extends StatefulWidget {
   _MatchingPageState createState() => _MatchingPageState();
 }
 
-class _MatchingPageState extends State<MatchingPage> {
+class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver {
   List<Map<String, dynamic>> _profiles = [];
   bool _isLoading = true;
   int _selectedIndex = 1;
@@ -33,9 +34,41 @@ class _MatchingPageState extends State<MatchingPage> {
   Map<String, bool> _starredStatus = {}; // Cache starred status
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _saveCurrentIndex();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      _saveCurrentIndex();
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
-    _fetchProfiles();
+    WidgetsBinding.instance.addObserver(this);
+    _loadLastViewedProfileIndex();
+  }
+
+  Future<void> _saveCurrentIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('currentPageIndex', _selectedIndex);
+  }
+
+  Future<void> _loadLastViewedProfileIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastIndex = prefs.getInt('currentPageIndex') ?? 0;
+    setState(() {
+      _selectedIndex = lastIndex;
+    });
+    await _fetchProfiles();
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<void> _fetchProfiles() async {
@@ -58,9 +91,6 @@ class _MatchingPageState extends State<MatchingPage> {
       Toaster.showToast("User liked!");
     }
   }
-
-  // lib/pages/Main%20page/matching_page.dart
-// lib/pages/Main%20page/matching_page.dart
 
   void _onStar(String starredUserId) async {
     final isStarred = await _matchingService.isUserStarred(starredUserId);
@@ -119,6 +149,7 @@ class _MatchingPageState extends State<MatchingPage> {
         children: [
           Expanded(
             child: PageView.builder(
+              controller: PageController(initialPage: _selectedIndex),
               itemCount: _profiles.length,
               onPageChanged: (index) {
                 setState(() {
