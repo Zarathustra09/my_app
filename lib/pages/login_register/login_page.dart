@@ -6,6 +6,7 @@ import 'package:my_app/pages/Main%20page/matching_page.dart';
 import 'package:my_app/pages/account_setup/verification_page.dart';
 import 'package:my_app/pages/login_register/signup_page.dart' as signup;
 import 'package:my_app/pages/login_register/forgot_password_page.dart';
+import '../../components/toaster.dart';
 import '../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -22,35 +23,73 @@ class LoginPage extends StatelessWidget {
 
   void signUserIn(BuildContext context) async {
     final authService = AuthService();
-    await authService.signin(
-      email: usernameController.text,
-      password: passwordController.text,
-      context: context,
-    );
+    final email = usernameController.text.trim();
+    final password = passwordController.text.trim();
 
-    final userData = await authService.checkUserData();
-    if (!userData['hasUsername']! ||
-        !userData['hasBirthday']! ||
-        !userData['hasImageUrl']!) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => GetUsernamePage()),
+    // Validate email and password
+    if (email.isEmpty || password.isEmpty) {
+      print('Email or password is empty');
+      Toaster.showToast('Please enter both email and password');
+      return;
+    }
+
+    // Validate email format
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    if (!emailRegex.hasMatch(email)) {
+      print('Invalid email format: $email');
+      Toaster.showToast('Invalid email format');
+      return;
+    }
+
+    try {
+      print('Attempting to sign in with email: $email');
+      await authService.signin(
+        email: email,
+        password: password,
+        context: context,
       );
-    } else if (!userData['hasGender']!) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => IamPage()),
-      );
-    } else if (!userData['hasInterests']!) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => YourInterestsPage()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MatchingPage()),
-      );
+
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('User not logged in. Redirecting to LoginPage');
+        Toaster.showToast('The inputted credentials do not match our records');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+        return;
+      }
+
+      final userData = await authService.checkUserData();
+      print('User data retrieved: $userData');
+      if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
+        print('Redirecting to GetUsernamePage');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => GetUsernamePage()),
+        );
+      } else if (!userData['hasGender']!) {
+        print('Redirecting to IamPage');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => IamPage()),
+        );
+      } else if (!userData['hasInterests']!) {
+        print('Redirecting to YourInterestsPage');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => YourInterestsPage()),
+        );
+      } else {
+        print('Redirecting to MatchingPage');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MatchingPage()),
+        );
+      }
+    } catch (e) {
+      print('Error during sign-in: $e');
+      Toaster.showToast('Error during sign-in. Please try again.');
     }
   }
 
