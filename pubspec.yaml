@@ -78,6 +78,16 @@ flutter:
     - lib/images/he.jpg
     - lib/images/jar.jpg
     - lib/images/ca.jpg
+  # - ICONS & Main new LOGO  
+    - lib/icons/COSPLAY.png
+    - lib/icons/LOGO.png
+    - lib/icons/MOBA.png
+    - lib/icons/PUZZLE.png
+    - lib/icons/GHOST.png
+    - lib/icons/RPG.png
+    - lib/icons/CASUAL.png
+    - lib/icons/WHEEL.png
+    - lib/icons/GACHA.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

@@ -8,6 +8,7 @@ import 'package:my_app/components/my_textfield.dart';
 import 'package:my_app/components/square_tile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../background.dart';
 
 class SignUpPage extends StatelessWidget {
   SignUpPage({super.key});
@@ -71,102 +72,85 @@ class SignUpPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+        child: Container(
+          width: size.width,
+          height: size.height,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: Background.gradientColors,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
-
                 // Logo
                 Image.asset(
-                  'lib/images/logo.png',
-                  height: 100,
+                  'lib/icons/LOGO.png',
+                  width: size.width * 0.3,
                 ),
+                const SizedBox(height: 20),
 
-                const SizedBox(height: 30),
-
-                // Sign up to continue text
-                const Text(
-                  'Sign up to continue',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                // Sign Up Form
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                ),
-
-                const SizedBox(height: 25),
-
-                // Email text field
-                MyTextField(
-                  controller: emailController,
-                  hintText: 'Enter your email',
-                  obscureText: false,
-                ),
-
-                const SizedBox(height: 10),
-
-                // Password text field
-                MyTextField(
-                  controller: passwordController,
-                  hintText: 'Enter your password',
-                  obscureText: true,
-                ),
-
-                const SizedBox(height: 10),
-
-                // Re-enter password text field
-                MyTextField(
-                  controller: reEnterPasswordController,
-                  hintText: 'Re-enter your password',
-                  obscureText: true,
-                ),
-
-                const SizedBox(height: 10),
-
-                // Sign up button
-                MyButton(
-                  onTap: () => signUserUp(context),
-                  text: 'Sign Up',
-                ),
-
-                const SizedBox(height: 30),
-
-                // Divider with text
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
+                      MyTextField(
+                        controller: emailController,
+                        hintText: "Email Address",
+                        obscureText: false,
                       ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'Or sign up with',
-                          style: TextStyle(color: Colors.black),
-                        ),
+                      const SizedBox(height: 15),
+                      MyTextField(
+                        controller: passwordController,
+                        hintText: "Password",
+                        obscureText: true,
                       ),
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
+                      const SizedBox(height: 15),
+                      MyTextField(
+                        controller: reEnterPasswordController,
+                        hintText: "Re-enter Password",
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 20),
+                      MyButton(
+                        onTap: () => signUserUp(context),
+                        text: 'Sign Up',
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 30),
+                // Or Divider
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        "Or",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.white)),
+                  ],
+                ),
 
-                // Social media sign up buttons
+                // Social Media Login
+                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -181,17 +165,16 @@ class SignUpPage extends StatelessWidget {
                   ],
                 ),
 
+                // Login Option
                 const SizedBox(height: 30),
-
-                // Already a member? Sign in now
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Already a member?',
-                      style: TextStyle(color: Colors.grey[700]),
+                    const Text(
+                      'Already have an account?',
+                      style: TextStyle(color: Colors.white),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 5),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -200,41 +183,14 @@ class SignUpPage extends StatelessWidget {
                         );
                       },
                       child: const Text(
-                        'Sign in now',
+                        'Sign In',
                         style: TextStyle(
-                          color: Colors.blue,
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Terms of use and privacy policy
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
-                        'Terms of use',
-                        style: TextStyle(
-                          color: Colors.pink,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        'Privacy Policy',
-                        style: TextStyle(
-                          color: Colors.pink,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),

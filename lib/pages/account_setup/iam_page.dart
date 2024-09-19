@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_app/pages/account_setup/getusername_page.dart';
 import 'yourinterest_page.dart';
+import '../background.dart'; // Import your background gradient file
 
 class IamPage extends StatefulWidget {
   const IamPage({super.key});
@@ -27,7 +28,6 @@ class _IamPageState extends State<IamPage> {
     if (user != null) {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (doc.exists && doc.data()!['gender'] != null) {
-        // Redirect to YourInterestsPage if gender data exists
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => GetUsernamePage()),
@@ -50,19 +50,16 @@ class _IamPageState extends State<IamPage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null && _selectedGender != null) {
-      // Save the selected gender to Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .set({'gender': _selectedGender}, SetOptions(merge: true));
 
-      // Navigate to YourInterestsPage
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => GetUsernamePage()),
       );
     } else {
-      // Handle the case where no gender is selected
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please select your gender'),
@@ -77,7 +74,18 @@ class _IamPageState extends State<IamPage> {
     if (_isLoading) {
       return Scaffold(
         body: Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'lib/icons/LOGO.png', // Your logo asset path
+                width: 150,
+                height: 150,
+              ),
+              const SizedBox(height: 20), // Spacing between the logo and progress bar
+              const CircularProgressIndicator(), // Progress indicator below the logo
+            ],
+          ),
         ),
       );
     }
@@ -101,41 +109,9 @@ class _IamPageState extends State<IamPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ListTile(
-                  title: Text(
-                    'Woman',
-                    style: TextStyle(
-                      color: _selectedGender == 'Woman' ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  trailing: _selectedGender == 'Woman'
-                      ? const Icon(Icons.check, color: Colors.white)
-                      : null,
-                  selected: _selectedGender == 'Woman',
-                  selectedTileColor: Colors.pink,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  onTap: () => _onGenderTap('Woman'),
-                ),
+                _buildGenderTile('Woman'),
                 const SizedBox(height: 10),
-                ListTile(
-                  title: Text(
-                    'Man',
-                    style: TextStyle(
-                      color: _selectedGender == 'Man' ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  trailing: _selectedGender == 'Man'
-                      ? const Icon(Icons.check, color: Colors.white)
-                      : null,
-                  selected: _selectedGender == 'Man',
-                  selectedTileColor: Colors.pink,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  onTap: () => _onGenderTap('Man'),
-                ),
+                _buildGenderTile('Man'),
                 const SizedBox(height: 10),
                 ListTile(
                   title: const Text('Choose another'),
@@ -148,24 +124,64 @@ class _IamPageState extends State<IamPage> {
                   },
                 ),
                 const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _onContinueTap,
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.pink,
-                    padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                _buildGradientButton(),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Gender selection tile with gradient background when selected
+  Widget _buildGenderTile(String gender) {
+    final bool isSelected = _selectedGender == gender;
+    return InkWell(
+      onTap: () => _onGenderTap(gender),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: Background.gradientColors, // Gradient colors when selected
+                )
+              : null, // No gradient if not selected
+          color: isSelected ? null : Colors.grey[200], // Light background if not selected
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ListTile(
+          title: Text(
+            gender,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black, // White text when selected
+            ),
+          ),
+          trailing: isSelected ? const Icon(Icons.check, color: Colors.white) : null,
+        ),
+      ),
+    );
+  }
+
+  // Gradient button for Continue
+  Widget _buildGradientButton() {
+    return InkWell(
+      onTap: _onContinueTap,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: Background.gradientColors, // Gradient colors from background.dart
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+          child: const Center(
+            child: Text(
+              'Continue',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
         ),

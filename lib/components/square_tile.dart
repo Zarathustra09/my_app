@@ -15,15 +15,15 @@ class SquareTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(15.0),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.white),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           color: Colors.grey[200],
         ),
         child: ColorFiltered(
           colorFilter: ColorFilter.mode(
-            Colors.pink, // Apply the pink color filter
+            Colors.blue, // Apply the pink color filter
             BlendMode.srcIn, // Use srcIn blend mode to apply the color
           ),
           child: Image.asset(

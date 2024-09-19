@@ -12,9 +12,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../account_setup/iam_page.dart';
 import '../account_setup/getusername_page.dart';
 import '../account_setup/yourinterest_page.dart';
+import '../background.dart';
 
 class LoginPage extends StatelessWidget {
-  LoginPage({super.key});
+  LoginPage({Key? key}) : super(key: key);
 
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
@@ -23,12 +24,14 @@ class LoginPage extends StatelessWidget {
     final authService = AuthService();
     await authService.signin(
       email: usernameController.text,
-      password: usernameController.text,
+      password: passwordController.text,
       context: context,
     );
 
     final userData = await authService.checkUserData();
-    if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
+    if (!userData['hasUsername']! ||
+        !userData['hasBirthday']! ||
+        !userData['hasImageUrl']!) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => GetUsernamePage()),
@@ -74,7 +77,9 @@ class LoginPage extends StatelessWidget {
       await FirebaseAuth.instance.signInWithCredential(credential);
 
       final userData = await AuthService().checkUserData();
-      if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
+      if (!userData['hasUsername']! ||
+          !userData['hasBirthday']! ||
+          !userData['hasImageUrl']!) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => GetUsernamePage()),
@@ -103,110 +108,123 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: Background.gradientColors,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
+                // Logo
                 Image.asset(
-                  'lib/images/logo.png',
-                  height: 100,
+                  'lib/icons/LOGO.png',
+                  width: constraints.maxWidth * 0.4, // make the logo responsive
                 ),
-                const SizedBox(height: 30),
-                const Text(
-                  'Greetings!',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
+
+                SizedBox(height: constraints.maxHeight * 0.000001), // make the spacing responsive
+
+                // Login Form
+                Container(
+                  width: constraints.maxWidth * 0.8, // make the form responsive
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        // Username Field
+                        MyTextField(
+                          controller: usernameController,
+                          hintText: "Email Address",
+                          obscureText: false,
+                        ),
+                        SizedBox(height: 15),
+
+                        // Password Field
+                        MyTextField(
+                          controller: passwordController,
+                          hintText: "Password",
+                          obscureText: true,
+                        ),
+                        SizedBox(height: 15),
+
+                        // Sign-in Button
+                        MyButton(
+                          onTap: () => signUserIn(context),
+                          text: 'Sign In',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 25),
-                MyTextField(
-                  controller: usernameController,
-                  hintText: 'Username',
-                  obscureText: false,
-                ),
-                const SizedBox(height: 10),
-                MyTextField(
-                  controller: passwordController,
-                  hintText: 'Password',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
-                          );
-                        },
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                    ],
+
+                SizedBox(height: constraints.maxHeight * 0.03), // make the spacing responsive
+
+                // Forgot Password
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                    );
+                  },
+                  child: Text(
+                    "Forgot Password?",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
-                const SizedBox(height: 25),
-                MyButton(
-                  onTap: () => signUserIn(context),
-                  text: 'Sign In',
+
+                // Or Divider
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(width: 55, height: 1, color: Colors.white),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        "Or",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Container(width: 55, height: 1, color: Colors.white),
+                  ],
                 ),
-                const SizedBox(height: 30),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'Or sign up with',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
+
+                SizedBox(height: constraints.maxHeight * 0.02), // make the spacing responsive
+
+                // Social Media Login Options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SquareTile(imagePath: 'lib/images/fb.png'),
                     SquareTile(
                       imagePath: 'lib/images/google.png',
                       onTap: () => signInWithGoogle(context),
                     ),
-                    SquareTile(imagePath: 'lib/images/apple.png'),
+                    SizedBox(width: 20),
+                    SquareTile(imagePath: 'lib/images/fb.png'),
                   ],
                 ),
-                const SizedBox(height: 30),
+
+                SizedBox(height: constraints.maxHeight * 0.05), // make the spacing responsive
+
+                // Register Option
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       'Not a member?',
-                      style: TextStyle(color: Colors.grey[700]),
+                      style: TextStyle(color: Colors.white),
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(
@@ -219,7 +237,7 @@ class LoginPage extends StatelessWidget {
                       child: const Text(
                         'Register now',
                         style: TextStyle(
-                          color: Colors.blue,
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -227,8 +245,8 @@ class LoginPage extends StatelessWidget {
                   ],
                 ),
               ],
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

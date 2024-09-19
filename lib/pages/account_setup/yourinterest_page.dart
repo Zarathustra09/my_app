@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/pages/Main%20page/matching_page.dart';
 import 'notification_pages.dart'; // Updated import to notification_pages.dart
+import '../background.dart'; // Import the background gradient file
 
 class YourInterestsPage extends StatefulWidget {
   const YourInterestsPage({super.key});
@@ -13,17 +14,16 @@ class YourInterestsPage extends StatefulWidget {
 
 class _YourInterestsPageState extends State<YourInterestsPage> {
   final List<Map<String, dynamic>> _interests = [
-    {'name': 'Cosplay', 'icon': Icons.camera_alt},
-    {'name': 'FPS', 'icon': Icons.shopping_bag},
-    {'name': 'Moba', 'icon': Icons.mic},
-    {'name': 'Puzzle', 'icon': Icons.self_improvement},
-    {'name': 'Horror', 'icon': Icons.restaurant},
-    {'name': 'RPG', 'icon': Icons.sports_tennis},
-    {'name': 'Casual', 'icon': Icons.directions_run},
-    {'name': 'Racing', 'icon': Icons.pool},
-    {'name': 'MMO', 'icon': Icons.palette},
-    {'name': 'Gacha', 'icon': Icons.flight},
-    {'name': 'Strategy', 'icon': Icons.dangerous},
+    {'name': 'Cosplay', 'icon': 'lib/icons/COSPLAY.png'},
+    {'name': 'FPS', 'icon': 'lib/icons/FPS.png'},
+    {'name': 'Moba', 'icon': 'lib/icons/MOBA.png'},
+    {'name': 'Puzzle', 'icon': 'lib/icons/PUZZLE.png'},
+    {'name': 'Horror', 'icon': 'lib/icons/GHOST.png'},
+    {'name': 'RPG', 'icon': 'lib/icons/RPG.png'},
+    {'name': 'Casual', 'icon': 'lib/icons/CASUAL.png'},
+    {'name': 'Racing', 'icon': 'lib/icons/WHEEL.png'},
+    {'name': 'Gacha', 'icon': 'lib/icons/GACHA.png'},
+    {'name': 'Strategy', 'icon': ''}, // Add appropriate image path if available
   ];
 
   final Set<String> _selectedInterests = {};
@@ -41,10 +41,9 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
     if (user != null) {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (doc.exists && doc.data()!['interests'] != null && (doc.data()!['interests'] as List).isNotEmpty) {
-        // Redirect to NotificationPage if interests data exists
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MatchingPage()), // Updated to NotificationPage
+          MaterialPageRoute(builder: (context) => MatchingPage()), // Updated to MatchingPage
         );
       } else {
         setState(() {
@@ -80,7 +79,6 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
         MaterialPageRoute(builder: (context) => EnableNotificationsPage()), // Updated to NotificationPage
       );
     } else {
-      // Handle the case where no interest is selected
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please select at least one interest'),
@@ -95,7 +93,18 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
     if (_isLoading) {
       return Scaffold(
         body: Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'lib/icons/LOGO.png', // Your logo asset path
+                width: 100,
+                height: 100,
+              ),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(), // Add progress indicator
+            ],
+          ),
         ),
       );
     }
@@ -144,7 +153,12 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
                         onTap: () => _onInterestTap(interest['name']),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isSelected ? Colors.pink : Colors.white,
+                            gradient: isSelected
+                                ? LinearGradient(
+                                    colors: Background.gradientColors, // Gradient colors when selected
+                                  )
+                                : null,
+                            color: isSelected ? null : Colors.grey[200], // Default color if not selected
                             border: Border.all(
                               color: isSelected ? Colors.pink : Colors.grey,
                             ),
@@ -153,10 +167,14 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                interest['icon'],
-                                color: isSelected ? Colors.white : Colors.black,
-                              ),
+                              interest['icon'] != ''
+                                  ? Image.asset(
+                                      interest['icon'],
+                                      width: 24,
+                                      height: 24,
+                                      color: isSelected ? Colors.white : Colors.black,
+                                    )
+                                  : Container(), // Handle missing icon case
                               const SizedBox(width: 8),
                               Text(
                                 interest['name'],
@@ -177,12 +195,10 @@ class _YourInterestsPageState extends State<YourInterestsPage> {
                 ElevatedButton(
                   onPressed: _onContinueTap,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.pink,
                     padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
-                    ),
+                    ),                  
                   ),
                   child: const Text(
                     'Continue',
