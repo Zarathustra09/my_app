@@ -4,6 +4,7 @@ Widget buildActionButtons({
   required void Function() onDislike,
   required void Function() onHeart,
   required void Function() onStar,
+  bool isStarred = false, // Add this parameter
 }) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 20.0),
@@ -12,7 +13,12 @@ Widget buildActionButtons({
       children: [
         _buildActionButton(Icons.close, Colors.orange, 60.0, onDislike),
         _buildActionButton(Icons.favorite, Colors.red, 80.0, onHeart),
-        _buildActionButton(Icons.star, Colors.blue, 60.0, onStar),
+        _buildActionButton(
+          isStarred ? Icons.star : Icons.star_border, // Conditionally render the star icon
+          Colors.blue,
+          60.0,
+          onStar,
+        ),
       ],
     ),
   );

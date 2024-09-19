@@ -30,6 +30,7 @@ class _MatchingPageState extends State<MatchingPage> {
   final MatchingService _matchingService = MatchingService();
   final int _pageSize = 10; // Number of profiles to load per page
   DocumentSnapshot? _lastDocument; // Last document snapshot for pagination
+  Map<String, bool> _starredStatus = {}; // Cache starred status
 
   @override
   void initState() {
@@ -39,6 +40,9 @@ class _MatchingPageState extends State<MatchingPage> {
 
   Future<void> _fetchProfiles() async {
     final fetchedProfiles = await _matchingService.fetchProfiles(_pageSize, _lastDocument);
+    for (var profile in fetchedProfiles) {
+      _starredStatus[profile['uid']] = await _matchingService.isUserStarred(profile['uid']);
+    }
     setState(() {
       _profiles.addAll(fetchedProfiles);
       _isLoading = false;
@@ -55,9 +59,33 @@ class _MatchingPageState extends State<MatchingPage> {
     }
   }
 
-  void _onStar(String starredUserId) {
-    _matchingService.saveStarredUser(starredUserId);
-    Toaster.showToast("User starred!");
+  // lib/pages/Main%20page/matching_page.dart
+// lib/pages/Main%20page/matching_page.dart
+
+  void _onStar(String starredUserId) async {
+    final isStarred = await _matchingService.isUserStarred(starredUserId);
+    if (isStarred) {
+      // Unstar the user
+      await _matchingService.deleteStarredUser(starredUserId);
+      Toaster.showToast("User unstarred!");
+      setState(() {
+        _profiles.removeWhere((profile) => profile['uid'] == starredUserId);
+        _starredStatus[starredUserId] = false;
+      });
+      // Remove the unstarred user from the matches page
+      await _matchingService.removeUserFromMatches(starredUserId);
+    } else {
+      // Star the user
+      await _matchingService.saveStarredUser(starredUserId);
+      Toaster.showToast("User starred!");
+      final newStarredUser = await _matchingService.fetchUserById(starredUserId);
+      setState(() {
+        _profiles.add(newStarredUser);
+        _starredStatus[starredUserId] = true;
+      });
+      // Add the starred user to the matches page
+      await _matchingService.addUserToMatches(newStarredUser);
+    }
   }
 
   @override
@@ -102,6 +130,7 @@ class _MatchingPageState extends State<MatchingPage> {
               },
               itemBuilder: (context, index) {
                 final profile = _profiles[index];
+                final isStarred = _starredStatus[profile['uid']] ?? false;
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -161,13 +190,13 @@ class _MatchingPageState extends State<MatchingPage> {
               },
             ),
           ),
-
           buildActionButtons(
             onDislike: () {
               // Handle dislike action
             },
             onHeart: () => _onHeart(_profiles[_selectedIndex]['uid']),
             onStar: () => _onStar(_profiles[_selectedIndex]['uid']),
+            isStarred: _starredStatus[_profiles[_selectedIndex]['uid']] ?? false, // Pass the starred status
           ),
         ],
       ),

@@ -16,6 +16,8 @@ class MatchingService {
     }
   }
 
+
+
   Future<void> saveStarredUser(String starredUserId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -25,6 +27,34 @@ class MatchingService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     }
+  }
+
+  Future<void> addUserToMatches(Map<String, dynamic> user) async {
+    final prefs = await SharedPreferences.getInstance();
+    final matchesJson = prefs.getStringList('cachedMatches') ?? [];
+    matchesJson.add(jsonEncode(user));
+    await prefs.setStringList('cachedMatches', matchesJson);
+  }
+
+  Future<Map<String, dynamic>> fetchUserById(String userId) async {
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final data = userDoc.data();
+    return {
+      'name': data?['username'] ?? 'Unknown',
+      'age': data?['birthday'] != null ? _calculateAge(data!['birthday']).toString() : 'Unknown',
+      'image': data?['imageUrl'] ?? 'https://via.placeholder.com/150',
+      'uid': userDoc.id,
+    };
+  }
+
+  Future<void> removeUserFromMatches(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final matchesJson = prefs.getStringList('cachedMatches') ?? [];
+    matchesJson.removeWhere((match) {
+      final matchMap = jsonDecode(match) as Map<String, dynamic>;
+      return matchMap['uid'] == userId;
+    });
+    await prefs.setStringList('cachedMatches', matchesJson);
   }
 
   Future<void> deleteStarredUser(String starredUserId) async {
@@ -93,6 +123,19 @@ class MatchingService {
       age--;
     }
     return age;
+  }
+
+  Future<bool> isUserStarred(String starredUserId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('stars')
+          .where('starredBy', isEqualTo: user.uid)
+          .where('starredUser', isEqualTo: starredUserId)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    }
+    return false;
   }
 
   int _calculateMatchScore(List<dynamic> userInterests, List<dynamic> profileInterests) {
