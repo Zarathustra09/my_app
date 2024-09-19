@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../components/toaster.dart';
 import '../pages/Main page/matching_page.dart';
 import '../pages/account_setup/getusername_page.dart';
 import '../pages/account_setup/iam_page.dart';
@@ -49,16 +50,19 @@ class AuthService {
     required BuildContext context,
   }) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      print('Attempting to sign in with email: $email');
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final user = FirebaseAuth.instance.currentUser;
+      final user = userCredential.user;
       if (user != null) {
+        print('User signed in successfully: ${user.uid}');
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (doc.exists) {
           final data = doc.data()!;
+          print('User data retrieved: $data');
           final userData = {
             'hasBirthday': data['birthday'] != null,
             'hasImageUrl': data['imageUrl'] != null,
@@ -68,40 +72,60 @@ class AuthService {
           };
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            final currentUser = FirebaseAuth.instance.currentUser;if (currentUser == null) {
+              print('User not logged in. Redirecting to LoginPage');
+              Toaster.showToast('The inputted credentials do not match our records');
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+              return;
+            }
+
             if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
+              print('Redirecting to GetUsernamePage');
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => GetUsernamePage()),
               );
             } else if (!userData['hasGender']!) {
+              print('Redirecting to IamPage');
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => IamPage()),
               );
             } else if (!userData['hasInterests']!) {
+              print('Redirecting to YourInterestsPage');
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => YourInterestsPage()),
               );
             } else {
+              print('Redirecting to MatchingPage');
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => MatchingPage()),
               );
             }
           });
+        } else {
+          print('User document does not exist');
         }
+      } else {
+        print('User is null after sign in');
       }
     } on FirebaseAuthException catch (e) {
       String message = '';
-      if (e.code == 'invalid-email') {
-        message = 'No user found for that email.';
-      } else if (e.code == 'invalid-credential') {
-        message = 'Wrong password provided for that user.';
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        message = 'Invalid email or password.';
+      } else if (e.code == 'too-many-requests') {
+        message = 'Access to this account has been temporarily disabled due to many failed login attempts. Please try again later or reset your password.';
       }
-      _showToast(message);
+      print('FirebaseAuthException: $e');
+      Toaster.showToast(message);
     } catch (e) {
-      _showToast('An error occurred. Please try again.');
+      print('Exception: $e');
+      Toaster.showToast('An error occurred. Please try again.');
     }
   }
 
