@@ -207,7 +207,7 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
                       child: IconButton(
                         icon: Icon(
                           Icons.camera_alt,
-                          color: Colors.pink,
+                          color: Colors.purple,
                         ),
                         onPressed: _pickImage,
                       ),
@@ -265,7 +265,7 @@ class _GetUsernamePageState extends State<GetUsernamePage> {
                   onPressed: _onContinueTap,
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: Colors.pink,
+                    backgroundColor: Colors.purple,
                     padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
