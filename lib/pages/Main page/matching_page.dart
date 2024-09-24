@@ -231,14 +231,30 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
             ),
           ),
           buildActionButtons(
-            onDislike: () {
-              // Handle dislike action
-            },
-            onHeart: () => _onHeart(_profiles[_selectedIndex]['uid']),
-            onStar: () => _onStar(_profiles[_selectedIndex]['uid']),
-            isStarred: _starredStatus[_profiles[_selectedIndex]['uid']] ?? false, // Pass the starred status
-            isHearted: _heartedStatus[_profiles[_selectedIndex]['uid']] ?? false, // Pass the hearted status
-          ),
+                    onDislike: () {
+                      // Handle dislike action
+                    },
+                    onHeart: () {
+                      if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
+                        _onHeart(_profiles[_selectedIndex]['uid']);
+                      } else {
+                        Fluttertoast.showToast(msg: "No profile available");
+                      }
+                    },
+                    onStar: () {
+                      if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
+                        _onStar(_profiles[_selectedIndex]['uid']);
+                      } else {
+                        Fluttertoast.showToast(msg: "No profile available");
+                      }
+                    },
+                    isStarred: _profiles.isNotEmpty && _selectedIndex < _profiles.length
+                        ? _starredStatus[_profiles[_selectedIndex]['uid']] ?? false
+                        : false,
+                    isHearted: _profiles.isNotEmpty && _selectedIndex < _profiles.length
+                        ? _heartedStatus[_profiles[_selectedIndex]['uid']] ?? false
+                        : false,
+                  ),
         ],
       ),
       bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1),

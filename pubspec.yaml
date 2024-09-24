@@ -37,9 +37,8 @@ flutter:
     - lib/images/apple.png
     - lib/images/google.png
     - lib/images/fb.png
-    - lib/images/logo.png
     - lib/images/he.jpg
-    - lib/images/jar.jpg
+    - lib/images/Jar.jpg
     - lib/images/ca.jpg
     - lib/icons/COSPLAY.png
     - lib/icons/LOGO.png

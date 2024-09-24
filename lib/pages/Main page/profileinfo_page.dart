@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'chat_page.dart'; // Import the ChatPage
+import 'matching_page.dart'; // Import the MatchingPage
+import 'chat_page.dart'; // Import your ChatPage or adjust as necessary
 
 class ProfileInfoPage extends StatefulWidget {
   final String uid;
@@ -87,152 +88,118 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MatchingPage()), // Redirect to MatchingPage
+        );
+        return false; // Prevent default back button action
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Profile Info',
-          style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatPage(
-                    name: profile?['username'] ?? 'Unknown',
-                    image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
-                    currentUserId: currentUserUid!,
-                    profileUserId: widget.uid,
-                  ),
-                ),
-              );
-            },
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text(
+            'Profile Info',
+            style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(profile?['imageUrl'] ?? 'https://via.placeholder.com/150'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  '${profile?['username'] ?? 'Unknown'}',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  profile?['age'] ?? 'Unknown',
-                  style: const TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Text(
-                    'About',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  if (currentUserUid == widget.uid)
-                    GestureDetector(
-                      onTap: _showEditAboutDialog,
-                      child: const Icon(Icons.edit, color: Colors.grey),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.chat),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatPage(
+                      name: profile?['username'] ?? 'Unknown',
+                      image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
+                      currentUserId: FirebaseAuth.instance.currentUser!.uid,
+                      profileUserId: widget.uid,
                     ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                profile?['about'] ?? 'Emptiness is in here',
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 8),
-              const SizedBox(height: 16),
-              const Text(
-                'Interests',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: (profile?['interests'] ?? []).map<Widget>((interest) {
-                  return Chip(
-                    label: Text(interest),
-                    backgroundColor: Colors.pink.withOpacity(0.2),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Gallery',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 100,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        body: _isLoading
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildGalleryItem('lib/images/ca.jpg'),
-                    _buildGalleryItem('lib/images/logo.png'),
-                    _buildGalleryItem('lib/images/Jar.jpg'),
-                    _buildGalleryItem('lib/images/he.jpg'),
+                    Image.asset(
+                      'lib/icons/LOGO.png', // Your app's logo path
+                      height: 150, // Adjust height as needed
+                    ),
+                    const SizedBox(height: 30),
+                    const CircularProgressIndicator(), // Loading progress bar
+                  ],
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile Avatar
+                    Center(
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundImage: NetworkImage(
+                          profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Username and Age
+                    Center(
+                      child: Text(
+                        '${profile?['username'] ?? 'Unknown'}, ${profile?['age'] ?? 'N/A'}',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // About Section
+                    const Text(
+                      'About:',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      profile?['about'] ?? 'No information provided.',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _showEditAboutDialog,
+                        child: const Text('Edit About'),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Interests Section
+                    const Text(
+                      'Interests:',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    profile?['interests'] != null && profile!['interests'].isNotEmpty
+                        ? Wrap(
+                            spacing: 8.0,
+                            runSpacing: 4.0,
+                            children: List<Widget>.generate(profile!['interests'].length, (int index) {
+                              return Chip(
+                                label: Text(profile!['interests'][index]),
+                              );
+                            }),
+                          )
+                        : const Text('No interests provided.'),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: const Text(
-                  'See all',
-                  style: TextStyle(fontSize: 16, color: Colors.pink),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGalleryItem(String imagePath) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          imagePath,
-          width: 80,
-          height: 100,
-          fit: BoxFit.cover,
-        ),
       ),
     );
   }
