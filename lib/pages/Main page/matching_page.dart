@@ -33,6 +33,7 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
   DocumentSnapshot? _lastDocument; // Last document snapshot for pagination
   Map<String, bool> _starredStatus = {}; // Cache starred status
   Map<String, bool> _heartedStatus = {}; // Cache hearted status
+  
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -152,111 +153,124 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
         centerTitle: true,
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'lib/icons/LOGO.png', // Your logo path
+                    width: 100,
+                    height: 100,
+                  ),
+                  const SizedBox(height: 20),
+                  const CircularProgressIndicator(),
+                ],
+              ),
+            )
           : Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-              controller: PageController(initialPage: _selectedIndex),
-              itemCount: _profiles.length,
-              onPageChanged: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-                if (index == _profiles.length - 1) {
-                  _fetchProfiles(); // Load more profiles when reaching the end
-                }
-              },
-              itemBuilder: (context, index) {
-                final profile = _profiles[index];
-                final isStarred = _starredStatus[profile['uid']] ?? false;
-                final isHearted = _heartedStatus[profile['uid']] ?? false;
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                            blurRadius: 10,
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 5),
-                      ],
-                      image: DecorationImage(
-                        image: CachedNetworkImageProvider(profile['image']),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    controller: PageController(initialPage: _selectedIndex),
+                    itemCount: _profiles.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                      if (index == _profiles.length - 1) {
+                        _fetchProfiles(); // Load more profiles when reaching the end
+                      }
+                    },
+                    itemBuilder: (context, index) {
+                      final profile = _profiles[index];
+                      final isStarred = _starredStatus[profile['uid']] ?? false;
+                      final isHearted = _heartedStatus[profile['uid']] ?? false;
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                           decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(16),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 10,
+                                  color: Colors.grey.withOpacity(0.5),
+                                  spreadRadius: 5),
+                            ],
+                            image: DecorationImage(
+                              image: CachedNetworkImageProvider(profile['image']),
+                              fit: BoxFit.cover,
                             ),
-                            color: Colors.black.withOpacity(0.6),
                           ),
-                          padding: const EdgeInsets.all(16),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Text(
-                                '${profile['name']}',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                profile['age'],
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 18),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(16),
+                                    bottomRight: Radius.circular(16),
+                                  ),
+                                  color: Colors.black.withOpacity(0.6),
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${profile['name']}',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      profile['age'],
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 18),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+                buildActionButtons(
+                  onDislike: () {
+                    // Handle dislike action
+                  },
+                  onHeart: () {
+                    if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
+                      _onHeart(_profiles[_selectedIndex]['uid']);
+                    } else {
+                      Fluttertoast.showToast(msg: "No profile available");
+                    }
+                  },
+                  onStar: () {
+                    if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
+                      _onStar(_profiles[_selectedIndex]['uid']);
+                    } else {
+                      Fluttertoast.showToast(msg: "No profile available");
+                    }
+                  },
+                  isStarred: _profiles.isNotEmpty && _selectedIndex < _profiles.length
+                      ? _starredStatus[_profiles[_selectedIndex]['uid']] ?? false
+                      : false,
+                  isHearted: _profiles.isNotEmpty && _selectedIndex < _profiles.length
+                      ? _heartedStatus[_profiles[_selectedIndex]['uid']] ?? false
+                      : false,
+                ),
+              ],
             ),
-          ),
-          buildActionButtons(
-                    onDislike: () {
-                      // Handle dislike action
-                    },
-                    onHeart: () {
-                      if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
-                        _onHeart(_profiles[_selectedIndex]['uid']);
-                      } else {
-                        Fluttertoast.showToast(msg: "No profile available");
-                      }
-                    },
-                    onStar: () {
-                      if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
-                        _onStar(_profiles[_selectedIndex]['uid']);
-                      } else {
-                        Fluttertoast.showToast(msg: "No profile available");
-                      }
-                    },
-                    isStarred: _profiles.isNotEmpty && _selectedIndex < _profiles.length
-                        ? _starredStatus[_profiles[_selectedIndex]['uid']] ?? false
-                        : false,
-                    isHearted: _profiles.isNotEmpty && _selectedIndex < _profiles.length
-                        ? _heartedStatus[_profiles[_selectedIndex]['uid']] ?? false
-                        : false,
-                  ),
-        ],
-      ),
       bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1),
     );
   }

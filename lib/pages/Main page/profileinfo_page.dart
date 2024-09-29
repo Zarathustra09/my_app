@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'matching_page.dart'; // Import the MatchingPage
 import 'chat_page.dart'; // Import your ChatPage or adjust as necessary
+import '../../services/auth_service.dart'; // Import the AuthService for logout
+import '../Main page/custom_bottom_navbar.dart'; // Import your custom bottom nav bar
 
 class ProfileInfoPage extends StatefulWidget {
   final String uid;
@@ -16,6 +18,7 @@ class ProfileInfoPage extends StatefulWidget {
 class _ProfileInfoPageState extends State<ProfileInfoPage> {
   Map<String, dynamic>? profile;
   bool _isLoading = true;
+  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
   @override
   void initState() {
@@ -67,15 +70,12 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
             ),
             TextButton(
               onPressed: () async {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
-                    'about': _aboutController.text,
-                  });
-                  setState(() {
-                    profile?['about'] = _aboutController.text;
-                  });
-                }
+                await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
+                  'about': _aboutController.text,
+                });
+                setState(() {
+                  profile?['about'] = _aboutController.text;
+                });
                 Navigator.of(context).pop();
               },
               child: const Text('Save'),
@@ -84,6 +84,10 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         );
       },
     );
+  }
+
+  void _logout() {
+    AuthService().signout(context: context);
   }
 
   @override
@@ -116,7 +120,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                     builder: (context) => ChatPage(
                       name: profile?['username'] ?? 'Unknown',
                       image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
-                      currentUserId: FirebaseAuth.instance.currentUser!.uid,
+                      currentUserId: currentUserId,
                       profileUserId: widget.uid,
                     ),
                   ),
@@ -197,9 +201,21 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                             }),
                           )
                         : const Text('No interests provided.'),
+                    const SizedBox(height: 24),
+                    // Show logout button only if it's the user's own profile
+                    if (widget.uid == currentUserId)
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _logout,
+                          child: const Text('Log Out'),
+                        ),
+                      ),
                   ],
                 ),
               ),
+        bottomNavigationBar: const CustomBottomNavBar(
+          selectedIndex: 3, // Set to Profile tab
+        ),
       ),
     );
   }

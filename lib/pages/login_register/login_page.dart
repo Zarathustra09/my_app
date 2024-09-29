@@ -222,6 +222,7 @@ class LoginPage extends StatelessWidget {
                 ),
 
                 // Or Divider
+                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[

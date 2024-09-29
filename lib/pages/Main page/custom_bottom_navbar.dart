@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'matches_page.dart';
 import 'matching_page.dart';
 import 'messages_page.dart';
+import '../Main page/profileinfo_page.dart'; // Import ProfileInfoPage
 import '../../services/auth_service.dart';
 import '../themes.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth for current user
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -31,8 +33,8 @@ class CustomBottomNavBar extends StatelessWidget {
           label: 'Messages',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.logout),
-          label: 'Logout',
+          icon: Icon(Icons.person_2),
+          label: 'Profile',
         ),
       ],
       currentIndex: selectedIndex,
@@ -60,36 +62,17 @@ class CustomBottomNavBar extends StatelessWidget {
             );
             break;
           case 3:
-            _showLogoutConfirmation(context);
+            final currentUser = FirebaseAuth.instance.currentUser;
+            if (currentUser != null) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileInfoPage(uid: currentUser.uid), // Navigate to ProfileInfoPage
+                ),
+              );
+            }
             break;
         }
-      },
-    );
-  }
-
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Logout Confirmation'),
-          content: const Text('Are you sure you want to log out?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Logout'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                AuthService().signout(context: context);
-              },
-            ),
-          ],
-        );
       },
     );
   }
