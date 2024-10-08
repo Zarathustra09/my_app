@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'matching_page.dart'; // Import the MatchingPage
 import 'chat_page.dart'; // Import your ChatPage or adjust as necessary
+import '../../services/auth_service.dart'; // Import the AuthService for logout
+import '../Main page/custom_bottom_navbar.dart'; // Import your custom bottom nav bar
 
 class ProfileInfoPage extends StatefulWidget {
   final String uid;
@@ -69,15 +71,12 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
             ),
             TextButton(
               onPressed: () async {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
-                    'about': _aboutController.text,
-                  });
-                  setState(() {
-                    profile?['about'] = _aboutController.text;
-                  });
-                }
+                await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
+                  'about': _aboutController.text,
+                });
+                setState(() {
+                  profile?['about'] = _aboutController.text;
+                });
                 Navigator.of(context).pop();
               },
               child: const Text('Save'),
@@ -86,6 +85,10 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         );
       },
     );
+  }
+
+  void _logout() {
+    AuthService().signout(context: context);
   }
 
   @override
@@ -118,7 +121,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                     builder: (context) => ChatPage(
                       name: profile?['username'] ?? 'Unknown',
                       image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
-                      currentUserId: FirebaseAuth.instance.currentUser!.uid,
+                      currentUserId: currentUserId,
                       profileUserId: widget.uid,
                     ),
                   ),

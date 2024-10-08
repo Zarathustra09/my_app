@@ -134,18 +134,21 @@ class SignUpPage extends StatelessWidget {
                 ),
 
                 // Or Divider
-                const SizedBox(height: 20),
                 Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.white)),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(width: 55, height: 1, color: Colors.white),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
                       child: Text(
                         "Or",
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
-                    Expanded(child: Divider(color: Colors.white)),
+                    Container(width: 55, height: 1, color: Colors.white),
                   ],
                 ),
 
@@ -160,8 +163,7 @@ class SignUpPage extends StatelessWidget {
                       imagePath: 'lib/images/google.png',
                       onTap: () => signInWithGoogle(context),
                     ),
-                    SizedBox(width: 25),
-                    SquareTile(imagePath: 'lib/images/apple.png'),
+                    
                   ],
                 ),
 
