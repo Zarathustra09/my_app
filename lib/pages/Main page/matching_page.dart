@@ -1,4 +1,3 @@
-// lib/pages/Main%20page/matching_page.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,13 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../components/toaster.dart';
 import '../../services/auth_service.dart';
 import '../../services/matching_service.dart';
-import 'package:my_app/components/toaster.dart';
 import 'profileinfo_page.dart';
 import 'messages_page.dart';
 import 'matches_page.dart';
 import '../themes.dart';
 import 'heart_dislike_function.dart';
 import 'custom_bottom_navbar.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../background.dart'; // Import your background.dart file
 
 class MatchingPage extends StatefulWidget {
   const MatchingPage({super.key});
@@ -33,7 +33,7 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
   DocumentSnapshot? _lastDocument; // Last document snapshot for pagination
   Map<String, bool> _starredStatus = {}; // Cache starred status
   Map<String, bool> _heartedStatus = {}; // Cache hearted status
-  
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -104,17 +104,14 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
   void _onStar(String starredUserId) async {
     final isStarred = await _matchingService.isUserStarred(starredUserId);
     if (isStarred) {
-      // Unstar the user
       await _matchingService.deleteStarredUser(starredUserId);
       Toaster.showToast("User unstarred!");
       setState(() {
         _profiles.removeWhere((profile) => profile['uid'] == starredUserId);
         _starredStatus[starredUserId] = false;
       });
-      // Remove the unstarred user from the matches page
       await _matchingService.removeUserFromMatches(starredUserId);
     } else {
-      // Star the user
       await _matchingService.saveStarredUser(starredUserId);
       Toaster.showToast("User starred!");
       final newStarredUser = await _matchingService.fetchUserById(starredUserId);
@@ -122,7 +119,6 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
         _profiles.add(newStarredUser);
         _starredStatus[starredUserId] = true;
       });
-      // Add the starred user to the matches page
       await _matchingService.addUserToMatches(newStarredUser);
     }
   }
@@ -130,7 +126,6 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
@@ -140,9 +135,10 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
             Text(
               'Discover',
               style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold),
+                color: Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Text(
               'Find your Cou-Pal',
@@ -154,17 +150,15 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
       ),
       body: _isLoading
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'lib/icons/LOGO.png', // Your logo path
-                    width: 200,
-                    height: 200,
-                  ),
-                  const SizedBox(height: 20),
-                  const CircularProgressIndicator(),
-                ],
+              child: ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: Background.gradientColors,
+                  tileMode: TileMode.mirror,
+                ).createShader(bounds),
+                child: const SpinKitPumpingHeart(
+                  color: Colors.purple,
+                  size: 100.0,
+                ),
               ),
             )
           : Column(
@@ -189,7 +183,9 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ProfileInfoPage(uid: profile['uid'])),
+                            MaterialPageRoute(
+                              builder: (context) => ProfileInfoPage(uid: profile['uid']),
+                            ),
                           );
                         },
                         child: Container(
@@ -198,9 +194,10 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                  blurRadius: 10,
-                                  color: Colors.grey.withOpacity(0.5),
-                                  spreadRadius: 5),
+                                blurRadius: 10,
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 5,
+                              ),
                             ],
                             image: DecorationImage(
                               image: CachedNetworkImageProvider(profile['image']),
@@ -225,14 +222,17 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
                                     Text(
                                       '${profile['name']}',
                                       style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold),
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     Text(
                                       profile['age'],
                                       style: const TextStyle(
-                                          color: Colors.white, fontSize: 18),
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                      ),
                                     ),
                                   ],
                                 ),

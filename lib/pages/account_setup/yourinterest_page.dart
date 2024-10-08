@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/pages/Main%20page/matching_page.dart';
 import 'notification_pages.dart'; // Updated import to notification_pages.dart
 import '../background.dart'; // Import the background gradient file
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class YourInterestsPage extends StatefulWidget {
   const YourInterestsPage({super.key});

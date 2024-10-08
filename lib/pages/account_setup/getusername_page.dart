@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'yourinterest_page.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+
 
 class GetUsernamePage extends StatefulWidget {
   const GetUsernamePage({super.key});

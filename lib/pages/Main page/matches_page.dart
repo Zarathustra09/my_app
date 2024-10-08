@@ -11,6 +11,7 @@ import 'matching_page.dart';
 import 'chat_page.dart'; // Import ChatPage
 import '../themes.dart';
 import 'custom_bottom_navbar.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class MatchesPage extends StatefulWidget {
   const MatchesPage({super.key});
@@ -96,7 +97,7 @@ class _MatchesPageState extends State<MatchesPage> {
         centerTitle: true,
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: SpinKitPumpingHeart(color: Theme.of(context).primaryColor)) // Specify a color
           : GridView.builder(
         padding: const EdgeInsets.all(10.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

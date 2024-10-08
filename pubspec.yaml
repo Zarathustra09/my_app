@@ -23,12 +23,16 @@ dependencies:
   timeago: ^3.7.0
   cached_network_image: ^3.4.1
   shared_preferences: ^2.3.2
+  flutter_spinkit: ^5.2.1
+  
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  flutter_launcher_icons: ^0.14.0   # <--- Add this here
+  flutter_launcher_icons: ^0.14.1
+
+
 
 flutter:
   uses-material-design: true
@@ -52,7 +56,7 @@ flutter:
     - lib/icons/FPS.png
 
 flutter_launcher_icons:
-  android: true        # Enable Android icon generation
-  ios: true            # Enable iOS icon generation
-  image_path: "lib/icons/LOGO.png"  # Path to your custom icon file
-  remove_alpha_ios: true   # Removes alpha channel for iOS icons
+  android: "launcher_icon"
+  ios: true
+  image_path: "lib/icons/MainLOGO.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21

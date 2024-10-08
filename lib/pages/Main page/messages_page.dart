@@ -5,6 +5,7 @@ import '../../services/message_service.dart';
 import 'chat_page.dart';
 import 'custom_bottom_navbar.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class MessagesPage extends StatefulWidget {
   const MessagesPage({super.key});
@@ -98,27 +99,27 @@ class _MessagesPageState extends State<MessagesPage> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: SpinKitPumpingHeart(color: Theme.of(context).primaryColor)) // Use SpinKitPumpingHeart
           : Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: ListView.builder(
-          itemCount: _filteredChatParticipants.length,
-          itemBuilder: (context, index) {
-            final participant = _filteredChatParticipants[index];
-            final profileUserId = participant['sender'] == FirebaseAuth.instance.currentUser?.uid
-                ? participant['receiver']
-                : participant['sender'];
-            return MessageTile(
-              imageUrl: participant['imageUrl'] ?? 'https://via.placeholder.com/150',
-              name: participant['username'] ?? 'Unknown',
-              message: participant['content'] ?? 'No message',
-              time: participant['timestamp'] != null ? participant['timestamp'].toDate().toString() : DateTime.now().toString(),
-              currentUserId: FirebaseAuth.instance.currentUser?.uid ?? '',
-              profileUserId: profileUserId,
-            );
-          },
-        ),
-      ),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ListView.builder(
+                itemCount: _filteredChatParticipants.length,
+                itemBuilder: (context, index) {
+                  final participant = _filteredChatParticipants[index];
+                  final profileUserId = participant['sender'] == FirebaseAuth.instance.currentUser?.uid
+                      ? participant['receiver']
+                      : participant['sender'];
+                  return MessageTile(
+                    imageUrl: participant['imageUrl'] ?? 'https://via.placeholder.com/150',
+                    name: participant['username'] ?? 'Unknown',
+                    message: participant['content'] ?? 'No message',
+                    time: participant['timestamp'] != null ? participant['timestamp'].toDate().toString() : DateTime.now().toString(),
+                    currentUserId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                    profileUserId: profileUserId,
+                  );
+                },
+              ),
+            ),
       bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 2),
     );
   }
