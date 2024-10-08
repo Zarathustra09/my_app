@@ -86,9 +86,37 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     );
   }
 
-  void _logout() {
-    AuthService().signout(context: context);
-  }
+  void _confirmLogout() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Dismiss the dialog
+            },
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Dismiss the dialog
+              _logout(); // Proceed with logout
+            },
+            child: const Text('Log Out'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _logout() {
+  AuthService().signout(context: context);
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +234,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                     if (widget.uid == currentUserId)
                       Center(
                         child: ElevatedButton(
-                          onPressed: _logout,
+                          onPressed: _confirmLogout,
                           child: const Text('Log Out'),
                         ),
                       ),

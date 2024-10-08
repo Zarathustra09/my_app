@@ -177,7 +177,7 @@ class LoginPage extends StatelessWidget {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
-                    child: Column(
+                    child: Column( 
                       children: [
                         // Username Field
                         MyTextField(

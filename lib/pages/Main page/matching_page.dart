@@ -159,8 +159,8 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
                 children: [
                   Image.asset(
                     'lib/icons/LOGO.png', // Your logo path
-                    width: 100,
-                    height: 100,
+                    width: 200,
+                    height: 200,
                   ),
                   const SizedBox(height: 20),
                   const CircularProgressIndicator(),
