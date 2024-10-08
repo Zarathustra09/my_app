@@ -16,10 +16,12 @@ class ProfileInfoPage extends StatefulWidget {
 class _ProfileInfoPageState extends State<ProfileInfoPage> {
   Map<String, dynamic>? profile;
   bool _isLoading = true;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _currentUserId = FirebaseAuth.instance.currentUser?.uid;
     _fetchProfileByUid(widget.uid);
   }
 
@@ -127,79 +129,80 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         ),
         body: _isLoading
             ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'lib/icons/LOGO.png', // Your app's logo path
-                      height: 150, // Adjust height as needed
-                    ),
-                    const SizedBox(height: 30),
-                    const CircularProgressIndicator(), // Loading progress bar
-                  ],
-                ),
-              )
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'lib/icons/LOGO.png', // Your app's logo path
+                height: 150, // Adjust height as needed
+              ),
+              const SizedBox(height: 30),
+              const CircularProgressIndicator(), // Loading progress bar
+            ],
+          ),
+        )
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Profile Avatar
-                    Center(
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundImage: NetworkImage(
-                          profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Username and Age
-                    Center(
-                      child: Text(
-                        '${profile?['username'] ?? 'Unknown'}, ${profile?['age'] ?? 'N/A'}',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // About Section
-                    const Text(
-                      'About:',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      profile?['about'] ?? 'No information provided.',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: _showEditAboutDialog,
-                        child: const Text('Edit About'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Interests Section
-                    const Text(
-                      'Interests:',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    profile?['interests'] != null && profile!['interests'].isNotEmpty
-                        ? Wrap(
-                            spacing: 8.0,
-                            runSpacing: 4.0,
-                            children: List<Widget>.generate(profile!['interests'].length, (int index) {
-                              return Chip(
-                                label: Text(profile!['interests'][index]),
-                              );
-                            }),
-                          )
-                        : const Text('No interests provided.'),
-                  ],
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Profile Avatar
+              Center(
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundImage: NetworkImage(
+                    profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
+                  ),
                 ),
               ),
+              const SizedBox(height: 16),
+              // Username and Age
+              Center(
+                child: Text(
+                  '${profile?['username'] ?? 'Unknown'}, ${profile?['age'] ?? 'N/A'}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // About Section
+              const Text(
+                'About:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                profile?['about'] ?? 'No information provided.',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              if (_currentUserId == widget.uid)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _showEditAboutDialog,
+                    child: const Text('Edit About'),
+                  ),
+                ),
+              const SizedBox(height: 24),
+              // Interests Section
+              const Text(
+                'Interests:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              profile?['interests'] != null && profile!['interests'].isNotEmpty
+                  ? Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: List<Widget>.generate(profile!['interests'].length, (int index) {
+                  return Chip(
+                    label: Text(profile!['interests'][index]),
+                  );
+                }),
+              )
+                  : const Text('No interests provided.'),
+            ],
+          ),
+        ),
       ),
     );
   }
