@@ -145,7 +145,7 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
                   fontWeight: FontWeight.bold),
             ),
             Text(
-              'Batangas, Philippines',
+              'Find your Cou-Pal',
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
           ],

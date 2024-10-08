@@ -16,12 +16,15 @@ class MessagesPage extends StatefulWidget {
 class _MessagesPageState extends State<MessagesPage> {
   final MessageService _messageService = MessageService();
   List<Map<String, dynamic>> _chatParticipants = [];
+  List<Map<String, dynamic>> _filteredChatParticipants = [];
   bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchChatParticipants();
+    _searchController.addListener(_filterChatParticipants);
   }
 
   Future<void> _fetchChatParticipants() async {
@@ -38,9 +41,24 @@ class _MessagesPageState extends State<MessagesPage> {
       }
       setState(() {
         _chatParticipants = participants;
+        _filteredChatParticipants = participants;
         _isLoading = false;
       });
     }
+  }
+
+  void _filterChatParticipants() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredChatParticipants = _chatParticipants;
+      } else {
+        _filteredChatParticipants = _chatParticipants.where((participant) {
+          final username = participant['username']?.toLowerCase() ?? '';
+          return username.contains(query);
+        }).toList();
+      }
+    });
   }
 
   @override
@@ -64,15 +82,29 @@ class _MessagesPageState extends State<MessagesPage> {
             },
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Search messages...',
+                border: InputBorder.none,
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ListView.builder(
-          itemCount: _chatParticipants.length,
+          itemCount: _filteredChatParticipants.length,
           itemBuilder: (context, index) {
-            final participant = _chatParticipants[index];
+            final participant = _filteredChatParticipants[index];
             final profileUserId = participant['sender'] == FirebaseAuth.instance.currentUser?.uid
                 ? participant['receiver']
                 : participant['sender'];

@@ -27,9 +27,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
           if (snapshot.hasError) {
-            return const Text('Something went wrong');
+            return const Center(child: Text('Something went wrong'));
           }
 
           if (snapshot.connectionState == ConnectionState.active) {
@@ -40,26 +40,26 @@ class MyApp extends StatelessWidget {
                 future: AuthService().checkUserData(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
+                    return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasData) {
                     final userData = snapshot.data!;
                     if (!userData['hasUsername']! || !userData['hasBirthday']! || !userData['hasImageUrl']!) {
-                      return GetUsernamePage();
+                      return const GetUsernamePage();
                     } else if (!userData['hasGender']!) {
-                      return IamPage();
+                      return const IamPage();
                     } else if (!userData['hasInterests']!) {
-                      return YourInterestsPage();
+                      return const YourInterestsPage();
                     } else {
-                      return MatchingPage();
+                      return const MatchingPage();
                     }
                   } else {
-                    return const Text('Error loading user data');
+                    return const Center(child: Text('Error loading user data'));
                   }
                 },
               );
             }
           }
-          return CircularProgressIndicator();
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );
