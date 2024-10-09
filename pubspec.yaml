@@ -32,6 +32,14 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.14.1
 
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "lib/icons/MainLOGO.png"
+  min_sdk_android: 24
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "lib/icons/MainLOGO.png"
 
 
 flutter:
@@ -54,9 +62,4 @@ flutter:
     - lib/icons/WHEEL.png
     - lib/icons/GACHA.png
     - lib/icons/FPS.png
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "lib/icons/MainLOGO.png"
-  min_sdk_android: 21 # android min sdk min:16, default 21
+    - lib/icons/MainLOGO.png

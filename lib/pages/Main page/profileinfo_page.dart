@@ -131,28 +131,30 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         ),
         centerTitle: true,
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert), // Toggle button icon
-            onSelected: (value) {
-              if (value == 'Edit') {
-                _showEditAboutDialog();
-              } else if (value == 'Logout') {
-                _confirmLogout();
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem<String>(
-                  value: 'Edit',
-                  child: Text('Edit'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'Logout',
-                  child: Text('Logout'),
-                ),
-              ];
-            },
-          ),
+          // Only show the menu if the current user is viewing their own profile
+          if (currentUserId == widget.uid)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert), // Toggle button icon
+              onSelected: (value) {
+                if (value == 'Edit') {
+                  _showEditAboutDialog();
+                } else if (value == 'Logout') {
+                  _confirmLogout();
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return [
+                  const PopupMenuItem<String>(
+                    value: 'Edit',
+                    child: Text('Edit'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Logout',
+                    child: Text('Logout'),
+                  ),
+                ];
+              },
+            ),
         ],
       ),
       body: _isLoading
