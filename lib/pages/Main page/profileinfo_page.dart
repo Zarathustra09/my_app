@@ -121,7 +121,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                     builder: (context) => ChatPage(
                       name: profile?['username'] ?? 'Unknown',
                       image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
-                      currentUserId: currentUserId,
+                      currentUserId: _currentUserId ?? '',
                       profileUserId: widget.uid,
                     ),
                   ),
@@ -206,6 +206,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
             ],
           ),
         ),
+        bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 3), // Add the custom bottom nav bar
       ),
     );
   }
