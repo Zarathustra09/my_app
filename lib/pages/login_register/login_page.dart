@@ -177,7 +177,7 @@ class LoginPage extends StatelessWidget {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
-                    child: Column( 
+                    child: Column(
                       children: [
                         // Username Field
                         MyTextField(
@@ -222,7 +222,7 @@ class LoginPage extends StatelessWidget {
                 ),
 
                 // Or Divider
-                
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -251,8 +251,6 @@ class LoginPage extends StatelessWidget {
                       imagePath: 'lib/images/google.png',
                       onTap: () => signInWithGoogle(context),
                     ),
-                    SizedBox(width: 20),
-                    SquareTile(imagePath: 'lib/images/fb.png'),
                   ],
                 ),
 

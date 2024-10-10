@@ -43,10 +43,13 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   }
 
   Future<void> _fetchProfileByUid(String uid) async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc = await FirebaseFirestore.instance.collection('users')
+        .doc(uid)
+        .get();
     if (doc.exists) {
       final data = doc.data();
-      final age = data?['birthday'] != null ? _calculateAge(data!['birthday']).toString() : 'Unknown';
+      final age = data?['birthday'] != null ? _calculateAge(data!['birthday'])
+          .toString() : 'Unknown';
       setState(() {
         profile = data;
         profile?['age'] = age;
@@ -59,7 +62,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     DateTime birthDate = DateTime.parse(birthday);
     DateTime today = DateTime.now();
     int age = today.year - birthDate.year;
-    if (today.month < birthDate.month || (today.month == birthDate.month && today.day < birthDate.day)) {
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
       age--;
     }
     return age;
@@ -91,7 +95,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
 
     if (pickedFile != null) {
       final File imageFile = File(pickedFile.path);
-      final String imageUrl = await _profileService.uploadImage(imageFile, widget.uid);
+      final String imageUrl = await _profileService.uploadImage(
+          imageFile, widget.uid);
 
       if (imageUrl.isNotEmpty) {
         await _profileService.addImageToGallery(widget.uid, imageUrl);
@@ -107,7 +112,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     if (currentUserId != widget.uid) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('You can only delete images from your own profile.'),
+          content: const Text(
+              'You can only delete images from your own profile.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -117,12 +123,14 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     await _profileService.deleteImageFromGallery(widget.uid, imageUrl);
 
     setState(() {
-      profile?['gallery'] = profile?['gallery']?.where((url) => url != imageUrl).toList();
+      profile?['gallery'] =
+          profile?['gallery']?.where((url) => url != imageUrl).toList();
     });
   }
 
   void _showEditAboutDialog() {
-    final TextEditingController _aboutController = TextEditingController(text: profile?['about']);
+    final TextEditingController _aboutController = TextEditingController(
+        text: profile?['about']);
 
     showDialog(
       context: context,
@@ -142,7 +150,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
             ),
             TextButton(
               onPressed: () async {
-                await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
+                await FirebaseFirestore.instance.collection('users').doc(
+                    widget.uid).update({
                   'about': _aboutController.text,
                 });
                 setState(() {
@@ -159,7 +168,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   }
 
   void _showEditInterestsDialog() {
-    final Set<String> _tempSelectedInterests = Set.from(profile?['interests'] ?? []);
+    final Set<String> _tempSelectedInterests = Set.from(
+        profile?['interests'] ?? []);
 
     showDialog(
       context: context,
@@ -196,7 +206,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
+                    await FirebaseFirestore.instance.collection('users').doc(
+                        widget.uid).update({
                       'interests': _tempSelectedInterests.toList(),
                     });
                     setState(() {
@@ -264,29 +275,16 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         ),
         centerTitle: true,
         actions: [
-          // Only show the menu if the current user is viewing their own profile
           if (currentUserId == widget.uid)
             PopupMenuButton<String>(
-              icon: const Icon(Icons.settings), // Toggle button icon
+              icon: const Icon(Icons.settings),
               onSelected: (value) {
-                if (value == 'Edit') {
-                  _showEditAboutDialog();
-                } else if (value == 'Edit Interests') {
-                  _showEditInterestsDialog();
-                } else if (value == 'Logout') {
+                if (value == 'Logout') {
                   _confirmLogout();
                 }
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  const PopupMenuItem<String>(
-                    value: 'Edit',
-                    child: Text('Edit About'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'Edit Interests',
-                    child: Text('Edit Interests'),
-                  ),
                   const PopupMenuItem<String>(
                     value: 'Logout',
                     child: Text('Logout'),
@@ -302,11 +300,11 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SpinKitPumpingHeart(
-              color: Colors.purple, // Set the heart color to purple
-              size: 100.0, // Adjust size as needed
+              color: Colors.purple,
+              size: 100.0,
             ),
             const SizedBox(height: 30),
-            const CircularProgressIndicator(), // Optional loading progress bar
+            const CircularProgressIndicator(),
           ],
         ),
       )
@@ -315,7 +313,6 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Avatar
             Center(
               child: CircleAvatar(
                 radius: 60,
@@ -325,18 +322,26 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               ),
             ),
             const SizedBox(height: 16),
-            // Username and Age
             Center(
-              child: Text(
-                '${profile?['username'] ?? 'Unknown'}, ${profile?['age'] ?? 'N/A'}',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${profile?['username'] ?? 'Unknown'}, ${profile?['age'] ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  if (currentUserId == widget.uid)
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 20),
+                      onPressed: _showEditUsernameDialog,
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
-            // Message Button
             if (currentUserId != widget.uid)
               Center(
-                child: TextButton(
+                child: TextButton.icon(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -350,17 +355,26 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                       ),
                     );
                   },
-                  child: const Text(
-                    'Talk with your cou-pal',
-                    style: TextStyle(fontSize: 16, color: Colors.blue), // Adjust color as needed
+                  icon: const Icon(Icons.message, color: Colors.blue),
+                  label: const Text(
+                    'Talk with your Cou-Pal',
+                    style: TextStyle(fontSize: 16, color: Colors.blue),
                   ),
                 ),
               ),
             const SizedBox(height: 16),
-            // About Section
-            const Text(
-              'About:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                const Text(
+                  'About:',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                if (currentUserId == widget.uid)
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 20),
+                    onPressed: _showEditAboutDialog,
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -368,10 +382,18 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 24),
-            // Interests Section
-            const Text(
-              'Interests:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                const Text(
+                  'Interests:',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                if (currentUserId == widget.uid)
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 20),
+                    onPressed: _showEditInterestsDialog,
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             profile?['interests'] != null && profile!['interests'].isNotEmpty
@@ -386,7 +408,6 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
             )
                 : const Text('No interests provided.'),
             const SizedBox(height: 24),
-            // Gallery Section
             const Text(
               'Gallery:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -436,7 +457,6 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                       ],
                     );
                   }),
-                // Add Image button
                 if (currentUserId == widget.uid)
                   GestureDetector(
                     onTap: _addImage,
@@ -456,8 +476,45 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         ),
       ),
       bottomNavigationBar: const CustomBottomNavBar(
-        selectedIndex: 3, // Set to Profile tab index
+        selectedIndex: 3,
       ),
+    );
+  }
+
+  void _showEditUsernameDialog() {
+    final TextEditingController _usernameController = TextEditingController(text: profile?['username']);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Username'),
+          content: TextField(
+            controller: _usernameController,
+            decoration: const InputDecoration(hintText: 'Enter new username'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
+                  'username': _usernameController.text,
+                });
+                setState(() {
+                  profile?['username'] = _usernameController.text;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
