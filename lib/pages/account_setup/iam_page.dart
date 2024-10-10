@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_app/pages/account_setup/getusername_page.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'yourinterest_page.dart';
 import '../background.dart'; // Import your background gradient file
 
