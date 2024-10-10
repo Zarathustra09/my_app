@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'matching_page.dart'; // Import the MatchingPage
-import 'chat_page.dart'; // Import your ChatPage or adjust as necessary
-import '../../services/auth_service.dart'; // Import the AuthService for logout
-import '../Main page/custom_bottom_navbar.dart'; // Import your custom bottom nav bar
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'matching_page.dart';
+import 'chat_page.dart';
+import '../../services/auth_service.dart';
+import '../../services/profile_service.dart';
+import '../Main page/custom_bottom_navbar.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class ProfileInfoPage extends StatefulWidget {
@@ -20,6 +23,18 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   Map<String, dynamic>? profile;
   bool _isLoading = true;
   final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  final ProfileService _profileService = ProfileService();
+  final List<Map<String, dynamic>> _interests = [
+    {'name': 'Cosplay', 'icon': 'lib/icons/COSPLAY.png'},
+    {'name': 'FPS', 'icon': 'lib/icons/FPS.png'},
+    {'name': 'Moba', 'icon': 'lib/icons/MOBA.png'},
+    {'name': 'Puzzle', 'icon': 'lib/icons/PUZZLE.png'},
+    {'name': 'Horror', 'icon': 'lib/icons/GHOST.png'},
+    {'name': 'RPG', 'icon': 'lib/icons/RPG.png'},
+    {'name': 'Casual', 'icon': 'lib/icons/CASUAL.png'},
+    {'name': 'Racing', 'icon': 'lib/icons/WHEEL.png'},
+    // Add more interests as needed
+  ];
 
   @override
   void initState() {
@@ -48,6 +63,62 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
       age--;
     }
     return age;
+  }
+
+  Future<void> _addImage() async {
+    if (currentUserId != widget.uid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('You can only add images to your own profile.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (profile?['gallery'] != null && profile!['gallery'].length >= 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('You can only save up to 6 images.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final File imageFile = File(pickedFile.path);
+      final String imageUrl = await _profileService.uploadImage(imageFile, widget.uid);
+
+      if (imageUrl.isNotEmpty) {
+        await _profileService.addImageToGallery(widget.uid, imageUrl);
+
+        setState(() {
+          profile?['gallery'] = [...(profile?['gallery'] ?? []), imageUrl];
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteImage(String imageUrl) async {
+    if (currentUserId != widget.uid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('You can only delete images from your own profile.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    await _profileService.deleteImageFromGallery(widget.uid, imageUrl);
+
+    setState(() {
+      profile?['gallery'] = profile?['gallery']?.where((url) => url != imageUrl).toList();
+    });
   }
 
   void _showEditAboutDialog() {
@@ -82,6 +153,68 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               child: const Text('Save'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showEditInterestsDialog() {
+    final Set<String> _tempSelectedInterests = Set.from(profile?['interests'] ?? []);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Edit Interests'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: _interests.map((interest) {
+                    return CheckboxListTile(
+                      title: Text(interest['name']),
+                      value: _tempSelectedInterests.contains(interest['name']),
+                      onChanged: (bool? value) {
+                        setState(() {
+                          if (value == true) {
+                            _tempSelectedInterests.add(interest['name']);
+                          } else {
+                            _tempSelectedInterests.remove(interest['name']);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
+                      'interests': _tempSelectedInterests.toList(),
+                    });
+                    setState(() {
+                      profile?['interests'] = _tempSelectedInterests.toList();
+                    });
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileInfoPage(uid: widget.uid),
+                      ),
+                    );
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -134,10 +267,12 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
           // Only show the menu if the current user is viewing their own profile
           if (currentUserId == widget.uid)
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert), // Toggle button icon
+              icon: const Icon(Icons.settings), // Toggle button icon
               onSelected: (value) {
                 if (value == 'Edit') {
                   _showEditAboutDialog();
+                } else if (value == 'Edit Interests') {
+                  _showEditInterestsDialog();
                 } else if (value == 'Logout') {
                   _confirmLogout();
                 }
@@ -146,7 +281,11 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                 return [
                   const PopupMenuItem<String>(
                     value: 'Edit',
-                    child: Text('Edit'),
+                    child: Text('Edit About'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Edit Interests',
+                    child: Text('Edit Interests'),
                   ),
                   const PopupMenuItem<String>(
                     value: 'Logout',
@@ -159,123 +298,185 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
       ),
       body: _isLoading
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SpinKitPumpingHeart(
-                    color: Colors.purple, // Set the heart color to purple
-                    size: 100.0, // Adjust size as needed
-                  ),
-                  const SizedBox(height: 30),
-                  const CircularProgressIndicator(), // Optional loading progress bar
-                ],
-              ),
-            )
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SpinKitPumpingHeart(
+              color: Colors.purple, // Set the heart color to purple
+              size: 100.0, // Adjust size as needed
+            ),
+            const SizedBox(height: 30),
+            const CircularProgressIndicator(), // Optional loading progress bar
+          ],
+        ),
+      )
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile Avatar
-                  Center(
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundImage: NetworkImage(
-                        profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Username and Age
-                  Center(
-                    child: Text(
-                      '${profile?['username'] ?? 'Unknown'}, ${profile?['age'] ?? 'N/A'}',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Message Button
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChatPage(
-                              name: profile?['username'] ?? 'Unknown',
-                              image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
-                              currentUserId: currentUserId,
-                              profileUserId: widget.uid,
-                            ),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Talk with your cou-pal',
-                        style: TextStyle(fontSize: 16, color: Colors.blue), // Adjust color as needed
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // About Section
-                  const Text(
-                    'About:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    profile?['about'] ?? 'No information provided.',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  // Interests Section
-                  const Text(
-                    'Interests:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  profile?['interests'] != null && profile!['interests'].isNotEmpty
-                      ? Wrap(
-                          spacing: 8.0,
-                          runSpacing: 4.0,
-                          children: List<Widget>.generate(profile!['interests'].length, (int index) {
-                            return Chip(
-                              label: Text(profile!['interests'][index]),
-                            );
-                          }),
-                        )
-                      : const Text('No interests provided.'),
-                  const SizedBox(height: 24),
-                  // Gallery Section
-                  const Text(
-                    'Gallery:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  // Dummy images for gallery
-                  GridView.count(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 8.0,
-                    mainAxisSpacing: 8.0,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: List.generate(6, (index) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          image: const DecorationImage(
-                            image: NetworkImage('https://via.placeholder.com/150'), // Dummy image URL
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ],
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile Avatar
+            Center(
+              child: CircleAvatar(
+                radius: 60,
+                backgroundImage: NetworkImage(
+                  profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
+                ),
               ),
             ),
+            const SizedBox(height: 16),
+            // Username and Age
+            Center(
+              child: Text(
+                '${profile?['username'] ?? 'Unknown'}, ${profile?['age'] ?? 'N/A'}',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Message Button
+            if (currentUserId != widget.uid)
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatPage(
+                          name: profile?['username'] ?? 'Unknown',
+                          image: profile?['imageUrl'] ?? 'https://via.placeholder.com/150',
+                          currentUserId: currentUserId,
+                          profileUserId: widget.uid,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Talk with your cou-pal',
+                    style: TextStyle(fontSize: 16, color: Colors.blue), // Adjust color as needed
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            // About Section
+            const Text(
+              'About:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              profile?['about'] ?? 'No information provided.',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            // Interests Section
+            const Text(
+              'Interests:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            profile?['interests'] != null && profile!['interests'].isNotEmpty
+                ? Wrap(
+              spacing: 8.0,
+              runSpacing: 4.0,
+              children: List<Widget>.generate(profile!['interests'].length, (int index) {
+                return Chip(
+                  label: Text(profile!['interests'][index]),
+                );
+              }),
+            )
+                : const Text('No interests provided.'),
+            const SizedBox(height: 24),
+            // Gallery Section
+            const Text(
+              'Gallery:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            GridView.count(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                if (profile?['gallery'] != null)
+                  ...List.generate(profile!['gallery'].length, (index) {
+                    return Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FullScreenImagePage(
+                                  imageUrl: profile!['gallery'][index],
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              image: DecorationImage(
+                                image: NetworkImage(profile!['gallery'][index]),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (currentUserId == widget.uid)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteImage(profile!['gallery'][index]),
+                            ),
+                          ),
+                      ],
+                    );
+                  }),
+                // Add Image button
+                if (currentUserId == widget.uid)
+                  GestureDetector(
+                    onTap: _addImage,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.grey[300],
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.add, size: 50, color: Colors.black),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
       bottomNavigationBar: const CustomBottomNavBar(
         selectedIndex: 3, // Set to Profile tab index
+      ),
+    );
+  }
+}
+
+class FullScreenImagePage extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImagePage({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: Image.network(imageUrl),
       ),
     );
   }

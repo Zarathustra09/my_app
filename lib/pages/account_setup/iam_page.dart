@@ -113,17 +113,6 @@ class _IamPageState extends State<IamPage> {
                 _buildGenderTile('Woman'),
                 const SizedBox(height: 10),
                 _buildGenderTile('Man'),
-                const SizedBox(height: 10),
-                ListTile(
-                  title: const Text('Choose another'),
-                  trailing: const Icon(Icons.arrow_forward),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  onTap: () {
-                    // Handle choose another action
-                  },
-                ),
                 const SizedBox(height: 20),
                 _buildGradientButton(),
               ],
@@ -143,8 +132,8 @@ class _IamPageState extends State<IamPage> {
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
-                  colors: Background.gradientColors, // Gradient colors when selected
-                )
+            colors: Background.gradientColors, // Gradient colors when selected
+          )
               : null, // No gradient if not selected
           color: isSelected ? null : Colors.grey[200], // Light background if not selected
           borderRadius: BorderRadius.circular(8),

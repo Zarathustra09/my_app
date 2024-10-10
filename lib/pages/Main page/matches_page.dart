@@ -98,6 +98,13 @@ class _MatchesPageState extends State<MatchesPage> {
       ),
       body: _isLoading
           ? Center(child: SpinKitPumpingHeart(color: Theme.of(context).primaryColor)) // Specify a color
+          : _matches.isEmpty
+          ? Center(
+        child: Text(
+          'Go and Discover your Cou-Pal',
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+        ),
+      )
           : GridView.builder(
         padding: const EdgeInsets.all(10.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

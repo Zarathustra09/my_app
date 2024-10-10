@@ -31,13 +31,17 @@ class _MessagesPageState extends State<MessagesPage> {
   Future<void> _fetchChatParticipants() async {
     final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUserUid != null) {
-      final participants = await _messageService.getChatParticipants(currentUserUid);
+      final participants = await _messageService.getChatParticipants(
+          currentUserUid);
       for (var participant in participants) {
         final profileUserId = participant['sender'] == currentUserUid
             ? participant['receiver']
             : participant['sender'];
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(profileUserId).get();
-        participant['imageUrl'] = userDoc.data()?['imageUrl'] ?? 'https://via.placeholder.com/150';
+        final userDoc = await FirebaseFirestore.instance.collection('users')
+            .doc(profileUserId)
+            .get();
+        participant['imageUrl'] =
+            userDoc.data()?['imageUrl'] ?? 'https://via.placeholder.com/150';
         participant['username'] = userDoc.data()?['username'] ?? 'Unknown';
       }
       setState(() {
@@ -72,7 +76,8 @@ class _MessagesPageState extends State<MessagesPage> {
         elevation: 0,
         title: const Text(
           'Messages',
-          style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         actions: [
@@ -99,27 +104,40 @@ class _MessagesPageState extends State<MessagesPage> {
         ),
       ),
       body: _isLoading
-          ? Center(child: SpinKitPumpingHeart(color: Theme.of(context).primaryColor)) // Use SpinKitPumpingHeart
+          ? Center(child: SpinKitPumpingHeart(color: Theme
+          .of(context)
+          .primaryColor))
+          : _filteredChatParticipants.isEmpty
+          ? Center(
+        child: Text(
+          'Talk to your Cou-Pal now',
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+        ),
+      )
           : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListView.builder(
-                itemCount: _filteredChatParticipants.length,
-                itemBuilder: (context, index) {
-                  final participant = _filteredChatParticipants[index];
-                  final profileUserId = participant['sender'] == FirebaseAuth.instance.currentUser?.uid
-                      ? participant['receiver']
-                      : participant['sender'];
-                  return MessageTile(
-                    imageUrl: participant['imageUrl'] ?? 'https://via.placeholder.com/150',
-                    name: participant['username'] ?? 'Unknown',
-                    message: participant['content'] ?? 'No message',
-                    time: participant['timestamp'] != null ? participant['timestamp'].toDate().toString() : DateTime.now().toString(),
-                    currentUserId: FirebaseAuth.instance.currentUser?.uid ?? '',
-                    profileUserId: profileUserId,
-                  );
-                },
-              ),
-            ),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: ListView.builder(
+          itemCount: _filteredChatParticipants.length,
+          itemBuilder: (context, index) {
+            final participant = _filteredChatParticipants[index];
+            final profileUserId = participant['sender'] ==
+                FirebaseAuth.instance.currentUser?.uid
+                ? participant['receiver']
+                : participant['sender'];
+            return MessageTile(
+              imageUrl: participant['imageUrl'] ??
+                  'https://via.placeholder.com/150',
+              name: participant['username'] ?? 'Unknown',
+              message: participant['content'] ?? 'No message',
+              time: participant['timestamp'] != null ? participant['timestamp']
+                  .toDate()
+                  .toString() : DateTime.now().toString(),
+              currentUserId: FirebaseAuth.instance.currentUser?.uid ?? '',
+              profileUserId: profileUserId,
+            );
+          },
+        ),
+      ),
       bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 2),
     );
   }
