@@ -154,18 +154,17 @@ class SignUpPage extends StatelessWidget {
 
                 // Social Media Login
                 const SizedBox(height: 20),
+                // Removed the Facebook icon
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SquareTile(imagePath: 'lib/images/fb.png'),
-                    SizedBox(width: 25),
                     SquareTile(
                       imagePath: 'lib/images/google.png',
                       onTap: () => signInWithGoogle(context),
                     ),
-                    
                   ],
                 ),
+
 
                 // Login Option
                 const SizedBox(height: 30),
