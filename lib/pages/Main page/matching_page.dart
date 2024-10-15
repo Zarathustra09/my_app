@@ -60,6 +60,13 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
     await prefs.setInt('currentPageIndex', _selectedIndex);
   }
 
+  void _onDislike(String dislikedUserId) async {
+    setState(() {
+      _profiles.removeWhere((profile) => profile['uid'] == dislikedUserId);
+    });
+    // Optionally, you can add any additional logic for handling the dislike action here
+  }
+
   Future<void> _loadLastViewedProfileIndex() async {
     final prefs = await SharedPreferences.getInstance();
     final lastIndex = prefs.getInt('currentPageIndex') ?? 0;
@@ -246,7 +253,11 @@ class _MatchingPageState extends State<MatchingPage> with WidgetsBindingObserver
                 ),
                 buildActionButtons(
                   onDislike: () {
-                    // Handle dislike action
+                    if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
+                      _onDislike(_profiles[_selectedIndex]['uid']);
+                    } else {
+                      Fluttertoast.showToast(msg: "No profile available");
+                    }
                   },
                   onHeart: () {
                     if (_profiles.isNotEmpty && _selectedIndex < _profiles.length) {
